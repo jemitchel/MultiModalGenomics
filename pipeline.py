@@ -1,7 +1,6 @@
 import pandas as pd
-import numpy as np
-import csv
 import os
+from sklearn.model_selection import train_test_split
 
 # way to index a df df.iloc[0,0])
 # way to get col names list(df)
@@ -37,7 +36,18 @@ gene = gene.div(gene.max(axis=1), axis=0)
 miRNA = miRNA.div(miRNA.max(axis=1), axis=0)
 
 # splitting labels into train set and validation set
+train_labels, test_labels, train_class, test_class = train_test_split(
+    lbl['case_id'], lbl['label'], test_size=0.15, random_state=42)
 
+# divides individual modalities into same train and test sets and transposes data frames
+miRNA_train = miRNA[train_labels].T
+miRNA_test = miRNA[test_labels].T
+gene_train = gene[train_labels].T
+gene_test = gene[test_labels].T
+CNV_train = CNV[train_labels].T
+CNV_test = CNV[test_labels].T
+meth_train = meth[train_labels].T
+meth_test = meth[test_labels].T
 
 
 

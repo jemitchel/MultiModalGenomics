@@ -1,6 +1,7 @@
 import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
+from feat_select import select_features
 
 # way to index a df df.iloc[0,0])
 # way to get col names list(df)
@@ -31,6 +32,10 @@ meth = pd.read_csv('DnaMeth_selected.csv') #reads in dataset
 meth = meth.set_index('Composite Element REF') #changes first column to be indices of the dataframe
 meth = meth[lbl['case_id']] #indexes out the correct patient samples
 
+# removes rows (features) that are all 0 across patients
+gene = gene.loc[~(gene==0).all(axis=1)]
+miRNA = miRNA.loc[~(miRNA==0).all(axis=1)]
+
 # normalizing gene expression and miRNA datasets
 gene = gene.div(gene.max(axis=1), axis=0)
 miRNA = miRNA.div(miRNA.max(axis=1), axis=0)
@@ -48,6 +53,9 @@ CNV_train = CNV[train_labels].T
 CNV_test = CNV[test_labels].T
 meth_train = meth[train_labels].T
 meth_test = meth[test_labels].T
+
+cool = select_features(miRNA_train,train_class)
+print(cool)
 
 
 

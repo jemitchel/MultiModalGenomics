@@ -52,7 +52,7 @@ meth_train = meth[train_labels].T
 meth_test = meth[test_labels].T
 
 train_class = train_class.set_index('case_id') #changes first column to be indices
-feat_selected = select_features(miRNA_train,train_class,'miRNA')
+feat_selected = select_features(miRNA_train,train_class,'miRNA',20)
 
 
 

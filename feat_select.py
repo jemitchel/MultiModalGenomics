@@ -2,15 +2,16 @@ import pandas as pd
 import pymrmr
 import numpy as np
 
-def select_features(X,y,modality):
+def select_features(X,y,modality,n_feats):
+    # in cv grid search should try different set sizes and discretization cutoffs
     # calls helper function to discretize
-    X,y = discretize(X,y,modality,1)
+    X,y = discretize(X,y,modality,2) #4th param is number std away from mean as discretization threshold
 
     # combine response with features to one dataframe [y,X]
     z = pd.concat([y, X], axis=1)
 
     # calling mRMR function
-    feat_selected = pymrmr.mRMR(z,'MIQ',10)
+    feat_selected = pymrmr.mRMR(z,'MIQ',n_feats)
     return (feat_selected)
 
 def discretize(X,y,modality,n): #features need to be -2,0,2 and response needs to be -1,1
@@ -22,11 +23,12 @@ def discretize(X,y,modality,n): #features need to be -2,0,2 and response needs t
     else:
         # get trimmed mean and trimmed standard deviation each row column (since features are now columns)
         # gets mean and std of each feature excluding outliers
-        iqr = (X.quantile(.75) - X.quantile(.25)) * 2
-        med = X.median(axis=0)
+        q1 = X.quantile(.25)
+        q3 = X.quantile(.75)
+        add_on = (q3 - q1) * 1.5
         X2 = pd.DataFrame(X, copy=True)
-        X2[X2 < med - iqr] = np.nan
-        X2[X2 > med + iqr] = np.nan
+        X2[X2 < q1 - add_on] = np.nan
+        X2[X2 > q3 + add_on] = np.nan
         std = X2.std(axis=0)
         av = X2.mean(axis=0)
         # std = X.std(axis=0) # for using non trimmed std

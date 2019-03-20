@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 from sklearn.model_selection import train_test_split
-from feat_select import select_features
+from train_ind import tr_ind
 
 os.chdir("C:\\Users\\jonat\\Documents\\Spring 2019 Classes\\4813\\BHI_data")
 labels = pd.read_csv('Label_selected.csv')
@@ -50,9 +50,8 @@ CNV_train = CNV[train_labels].T
 CNV_test = CNV[test_labels].T
 meth_train = meth[train_labels].T
 meth_test = meth[test_labels].T
-
 train_class = train_class.set_index('case_id') #changes first column to be indices
-feat_selected = select_features(miRNA_train,train_class,'miRNA',20)
+tr_ind(miRNA_train,train_class,'miRNA')
 
 
 

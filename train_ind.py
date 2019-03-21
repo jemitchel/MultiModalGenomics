@@ -42,14 +42,14 @@ def tr_ind(X,y,type):
         # feature selection for train data
         X_train2 = pd.DataFrame(X_train, copy=True)  # copies the original feature dataframe
         y_train2 = pd.DataFrame(y_train, copy=True)  # copies the original feature dataframe
-        feat_selected = select_features(X_train, y_train, type, 50)
+        feat_selected = select_features(X_train, y_train, type, 30)
         fold_feats.append(feat_selected)
     print(fold_feats)
 
     # compute average accuracy for each possible parameter combination
     for k in kernels:
         for c in c_values:
-            for num_feats in [10,20,30,50]:
+            for num_feats in [10,20,30]:
                 count = 0
                 for train,test in kf.split(X,y):
                     tr_ndx = X.index.values[train]

@@ -5,7 +5,7 @@ import numpy as np
 def select_features(X,y,modality,n_feats):
     # in cv grid search should try different set sizes and discretization cutoffs
     # calls helper function to discretize
-    X,y = discretize(X,y,modality,.5) #4th param is number std away from mean as discretization threshold
+    X,y = discretize(X,y,modality,1) #4th param is number std away from mean as discretization threshold
 
     # combine response with features to one dataframe [y,X]
     z = pd.concat([y, X], axis=1)

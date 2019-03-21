@@ -21,3 +21,4 @@ def tr_ind(X,y,type):
 
     for param, score in zip(clf.cv_results_['params'], clf.cv_results_['mean_test_score']):
         print(param, score)
+#test

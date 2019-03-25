@@ -1,9 +1,12 @@
 import pandas as pd
 import pymrmr
 import numpy as np
+from scipy.stats import ttest_ind
 
 def select_features(X,y,modality,n_feats):
-    # in cv grid search should try different set sizes and discretization cutoffs
+    if modality == 'gene':
+        X = reduce(X,y)
+
     # calls helper function to discretize
     X,y = discretize(X,y,modality,2) #4th param is number std away from mean as discretization threshold
 
@@ -43,5 +46,19 @@ def discretize(X,y,modality,n): #features need to be -2,0,2 and response needs t
     y[y == 0] = -1
     y = y.astype('int64')  # makes the numbers integers, not floats
     return (X,y)
+
+def reduce(X,y):
+    t1 = X.loc[y['label'] == 0]
+    t2 = X.loc[y['label'] == 1]
+    stat,pv = ttest_ind(t1,t2,axis=0)
+    feats = []
+    for i in range(len(pv)):
+        if pv[i] < .05:
+            feats.append(list(X)[i])
+    # pv = [i for i in range(len(pv)) if pv[i] < .1]
+    # X = X.iloc[:,pv]
+    X = X.loc[:,feats]
+    print(X.shape[1])
+    return X
 
 

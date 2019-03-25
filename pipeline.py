@@ -4,6 +4,8 @@ from sklearn.model_selection import train_test_split
 from train_ind import tr_ind
 from sklearn import preprocessing
 import numpy as np
+from feat_select import select_features
+
 
 os.chdir("C:\\Users\\jonat\\Documents\\Spring 2019 Classes\\4813\\BHI_data")
 labels = pd.read_csv('Label_selected.csv')
@@ -67,6 +69,9 @@ gene_train = pd.DataFrame(gene_train,columns=list(gene_train_copy)).set_index(ge
 train_class = train_class.set_index('case_id') # changes first column to be indices
 
 tr_ind(miRNA_train,train_class,'miRNA') # fs + classification cv
+# tr_ind(gene_train,train_class,'gene') # fs + classification cv
+# fs = select_features(gene_train,train_class,'gene',10)
+
 
 
 

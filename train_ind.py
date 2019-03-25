@@ -43,7 +43,7 @@ def tr_ind(X,y,type):
         # feature selection for train data
         X_train2 = pd.DataFrame(X_train, copy=True)  # copies the original feature dataframe
         y_train2 = pd.DataFrame(y_train, copy=True)  # copies the original feature dataframe
-        feat_selected = select_features(X_train, y_train, type, 20)
+        feat_selected = select_features(X_train, y_train, type, 5)
         fold_feats.append(feat_selected)
     print(fold_feats)
 
@@ -51,7 +51,7 @@ def tr_ind(X,y,type):
     tot_acc = []
     for k in kernels:
         for c in c_values:
-            for num_feats in [10,20]:
+            for num_feats in [2,4,5]:
                 count = 0
                 acc = []
                 for train,test in kf.split(X,y):
@@ -68,7 +68,7 @@ def tr_ind(X,y,type):
 
                     # start of classification
                     clf = svm.SVC(C=c,gamma="auto",kernel=k)
-                    clf.fit(X_train, y_train.values.ravel()) #can also try X_train here if alter it first
+                    clf.fit(X_train, y_train.values.ravel())
                     acc.append(clf.score(X_test,y_test))
                     count = count + 1 # iterates to the next fold
                 print('kernel:%s, c-value:%f, num feats:%d' % (k, c, num_feats))

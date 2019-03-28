@@ -3,18 +3,24 @@ import pymrmr
 import numpy as np
 from scipy.stats import ttest_ind
 
-def select_features(X,y,modality,n_feats):
-    if modality == 'gene':
-        X = reduce(X,y)
+def select_features(X,y,modality,method,n_feats):
 
-    # calls helper function to discretize
-    X,y = discretize(X,y,modality,2) #4th param is number std away from mean as discretization threshold
+    if method == 'mrmr':
+        if modality == 'gene': #for mRNA dataset doing prefiltering with ttest
+            init_feats = reduce(X, y, 1000)
+            X = X.loc[:, init_feats]
 
-    # combine response with features to one dataframe [y,X]
-    z = pd.concat([y, X], axis=1)
+        # calls helper function to discretize
+        X,y = discretize(X,y,modality,1) #4th param is number std away from mean as discretization threshold
 
-    # calling mRMR function
-    feat_selected = pymrmr.mRMR(z,'MIQ',n_feats)
+        # combine response with features to one dataframe [y,X]
+        z = pd.concat([y, X], axis=1)
+
+        # calling mRMR function
+        feat_selected = pymrmr.mRMR(z,'MIQ',n_feats)
+    elif method == 'ttest':
+        feat_selected = reduce(X, y, n_feats)
+
     return (feat_selected)
 
 def discretize(X,y,modality,n): #features need to be -2,0,2 and response needs to be -1,1
@@ -32,10 +38,10 @@ def discretize(X,y,modality,n): #features need to be -2,0,2 and response needs t
         X2 = pd.DataFrame(X, copy=True)
         X2[X2 < q1 - add_on] = np.nan
         X2[X2 > q3 + add_on] = np.nan
-        std = X2.std(axis=0)
-        av = X2.mean(axis=0)
-        # std = X.std(axis=0) # for using non trimmed std
-        # av = X.mean(axis=0) # for using non trimmed mean
+        # std = X2.std(axis=0)
+        # av = X2.mean(axis=0)
+        std = X.std(axis=0) # for using non trimmed std
+        av = X.mean(axis=0) # for using non trimmed mean
 
         X[X < av-(n*std)] = -2
         X[X > av+(n*std)] = 2
@@ -47,18 +53,15 @@ def discretize(X,y,modality,n): #features need to be -2,0,2 and response needs t
     y = y.astype('int64')  # makes the numbers integers, not floats
     return (X,y)
 
-def reduce(X,y):
+def reduce(X,y,n_feats):
     t1 = X.loc[y['label'] == 0]
     t2 = X.loc[y['label'] == 1]
     stat,pv = ttest_ind(t1,t2,axis=0)
     feats = []
-    for i in range(len(pv)):
-        if pv[i] < .05:
-            feats.append(list(X)[i])
-    # pv = [i for i in range(len(pv)) if pv[i] < .1]
-    # X = X.iloc[:,pv]
-    X = X.loc[:,feats]
-    print(X.shape[1])
-    return X
+    indicies = np.argsort(pv)
+    for i in range(len(indicies)):
+        if i < n_feats:
+            feats.append(list(X)[indicies[i]])
+    return feats
 
 

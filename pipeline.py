@@ -68,9 +68,9 @@ gene_train = pd.DataFrame(gene_train,columns=list(gene_train_copy)).set_index(ge
 
 train_class = train_class.set_index('case_id') # changes first column to be indices
 
-tr_ind(miRNA_train,train_class,'miRNA') # fs + classification cv
-# tr_ind(gene_train,train_class,'gene') # fs + classification cv
-# fs = select_features(gene_train,train_class,'gene',10)
+# tr_ind(miRNA_train,train_class,'miRNA') # fs + classification cv
+tr_ind(gene_train,train_class,'gene','mrmr') # fs + classification cv
+# fs = select_features(miRNA_train,train_class,'miRNA',30)
 
 
 

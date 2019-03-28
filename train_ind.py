@@ -9,49 +9,29 @@ import numpy as np
 import random
 
 # outputs a classifier and optimal features
-def tr_ind(X,y,type):
-    # # need to put everything below in a loop so can test different feature set sizes
-    # X2 = pd.DataFrame(X, copy=True) # copies the original feature dataframe
-    #
-    # print(X.shape,y.shape)
-    # # selects top n features
-    # feat_selected = select_features(X, y, type, 20)
-    # X2 = X2[feat_selected] # shrinks feature matrix to only include selected features
-    #
-    # # start of classification
-    # parameters = {'kernel': ('linear','poly','rbf','sigmoid'), 'C': [0.1, 1, 10, 100]}
-    # svc = svm.SVC(gamma="auto")
-    # clf = GridSearchCV(svc, parameters, cv=4)
-    # clf.fit(X2, y.values.ravel()) #can also try X here if alter it first
-    #
-    # for param, score in zip(clf.cv_results_['params'], clf.cv_results_['mean_test_score']):
-    #     print(param, score)
-
-
+def tr_ind(X,y,type,f_sel):
 
     # manually doing grid search cross-validation
-    kernels = ['linear', 'poly', 'rbf', 'sigmoid']
-    c_values = [0.1, 1, 10, 100]
+    kernels = ['linear','rbf', 'sigmoid']
+    c_values = [.01,0.1,1,10]
     kf = StratifiedKFold(n_splits=4, shuffle=True, random_state=12)
     fold_feats = []
     for train, test in kf.split(X, y):
         tr_ndx = X.index.values[train]
-        te_ndx = X.index.values[test]
-        X_train, X_test = X.loc[tr_ndx, :], X.loc[te_ndx, :]
-        y_train, y_test = y.loc[tr_ndx, :], y.loc[te_ndx, :]
+        X_train, y_train = X.loc[tr_ndx, :], y.loc[tr_ndx, :]
 
         # feature selection for train data
-        X_train2 = pd.DataFrame(X_train, copy=True)  # copies the original feature dataframe
-        y_train2 = pd.DataFrame(y_train, copy=True)  # copies the original feature dataframe
-        feat_selected = select_features(X_train, y_train, type, 5)
+        feat_selected = select_features(X_train, y_train, type, f_sel, 50)
         fold_feats.append(feat_selected)
-    print(fold_feats)
 
     # compute average accuracy for each possible parameter combination
     tot_acc = []
+    # para_list = [(kernel, c, num_fea) for kernel in kernels for c in c_values for num_fea in num_feats]
+    # for (kernel, c, num_fea) in para_list:
+    #     pass
     for k in kernels:
         for c in c_values:
-            for num_feats in [2,4,5]:
+            for num_feats in [2,10,25,50]:
                 count = 0
                 acc = []
                 for train,test in kf.split(X,y):

@@ -13,7 +13,7 @@ def tr_ind(X,y,type,f_sel):
 
     # manually doing grid search cross-validation
     kernels = ['linear','rbf', 'sigmoid']
-    c_values = [.01,0.1,1,10]
+    c_values = [0.1,1,10]
     kf = StratifiedKFold(n_splits=4, shuffle=True, random_state=12)
     fold_feats = []
     for train, test in kf.split(X, y):
@@ -21,7 +21,7 @@ def tr_ind(X,y,type,f_sel):
         X_train, y_train = X.loc[tr_ndx, :], y.loc[tr_ndx, :]
 
         # feature selection for train data
-        feat_selected = select_features(X_train, y_train, type, f_sel, 50)
+        feat_selected = select_features(X_train, y_train, type, f_sel, 20)
         fold_feats.append(feat_selected)
 
     # compute average accuracy for each possible parameter combination
@@ -31,7 +31,7 @@ def tr_ind(X,y,type,f_sel):
     #     pass
     for k in kernels:
         for c in c_values:
-            for num_feats in [2,10,25,50]:
+            for num_feats in [2,20]:
                 count = 0
                 acc = []
                 for train,test in kf.split(X,y):

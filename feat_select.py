@@ -6,8 +6,8 @@ from scipy.stats import ttest_ind
 def select_features(X,y,modality,method,n_feats):
 
     if method == 'mrmr':
-        if modality == 'gene': #for mRNA dataset doing prefiltering with ttest
-            init_feats = reduce(X, y, 1000)
+        if modality == 'gene' or modality == 'meth': #for these doing prefiltering with ttest
+            init_feats = reduce(X, y, 2000)
             X = X.loc[:, init_feats]
 
         # calls helper function to discretize
@@ -32,12 +32,12 @@ def discretize(X,y,modality,n): #features need to be -2,0,2 and response needs t
     else:
         # get trimmed mean and trimmed standard deviation each row column (since features are now columns)
         # gets mean and std of each feature excluding outliers
-        q1 = X.quantile(.25)
-        q3 = X.quantile(.75)
-        add_on = (q3 - q1) * 1.5
-        X2 = pd.DataFrame(X, copy=True)
-        X2[X2 < q1 - add_on] = np.nan
-        X2[X2 > q3 + add_on] = np.nan
+        # q1 = X.quantile(.25)
+        # q3 = X.quantile(.75)
+        # add_on = (q3 - q1) * 1.5
+        # X2 = pd.DataFrame(X, copy=True)
+        # X2[X2 < q1 - add_on] = np.nan
+        # X2[X2 > q3 + add_on] = np.nan
         # std = X2.std(axis=0)
         # av = X2.mean(axis=0)
         std = X.std(axis=0) # for using non trimmed std

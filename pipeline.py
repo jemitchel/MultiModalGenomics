@@ -23,6 +23,18 @@ gene = pd.read_csv('GeneExp_selected.csv') #reads in dataset
 gene = gene.set_index(gene.columns[0]) #changes first column to be indices of the dataframe
 gene = gene[lbl['case_id']] #indexes out the correct patient samples
 
+
+# removes all non-coding transcripts from the mRNA dataset
+fixed_indicies = []
+for i in range(gene.shape[0]):
+    fixed_indicies.append(gene.index.values[i].split('.')[0])
+gene.index = fixed_indicies
+
+coding = pd.read_csv('pr_coding_feats.csv')
+keepers = list(coding['ensembl_gene_id'])
+gene = gene.loc[keepers,:]
+
+
 # CNV dataset
 CNV = pd.read_csv('CNV_selected.csv') #reads in dataset
 CNV = CNV.set_index('Gene_Symbol') #changes first column to be indices of the dataframe
@@ -32,6 +44,7 @@ CNV = CNV[lbl['case_id']] #indexes out the correct patient samples
 meth = pd.read_csv('DnaMeth_selected.csv') #reads in dataset
 meth = meth.set_index('Composite Element REF') #changes first column to be indices of the dataframe
 meth = meth[lbl['case_id']] #indexes out the correct patient samples
+
 
 # removes rows (features) that are all 0 across patients
 gene = gene.loc[~(gene==0).all(axis=1)]
@@ -66,11 +79,14 @@ gene_scaler = preprocessing.RobustScaler().fit(gene_train)
 gene_train = gene_scaler.transform(gene_train)
 gene_train = pd.DataFrame(gene_train,columns=list(gene_train_copy)).set_index(gene_train_copy.index.values)
 
+
 train_class = train_class.set_index('case_id') # changes first column to be indices
 
 # tr_ind(miRNA_train,train_class,'miRNA') # fs + classification cv
 tr_ind(gene_train,train_class,'gene','mrmr') # fs + classification cv
-# fs = select_features(miRNA_train,train_class,'miRNA',30)
+# fs = select_features(meth_train,train_class,'meth','mrmr',30)
+# tr_ind(meth_train,train_class,'meth','mrmr') # fs + classification cv
+
 
 
 

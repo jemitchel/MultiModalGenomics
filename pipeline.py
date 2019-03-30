@@ -3,96 +3,61 @@ import os
 from sklearn.model_selection import train_test_split
 from train_ind import tr_ind
 from sklearn import preprocessing
-import numpy as np
-from feat_select import select_features
+
+def pipeline(rem_zeros):
+
+    # loads all data
+    os.chdir("C:\\Users\\jonat\\Documents\\Spring 2019 Classes\\4813\\BHI_data")
+    labels = pd.read_csv('Label_selected.csv')
+    ndx = labels.index[labels['label'] > -1].tolist() #gets indices of patients to use
+    lbl = labels.iloc[ndx,[0,4]] #makes a new dataframe of patients to use (their IDs and survival response)
+
+    os.chdir("C:\\Users\\jonat\\Documents\\Spring 2019 Classes\\4813\\Processed_data")
+    gene = pd.read_csv('gene.csv',index_col=0)
+    miRNA = pd.read_csv('miRNA.csv',index_col=0)
+    meth = pd.read_csv('meth.csv',index_col=0)
+    CNV = pd.read_csv('CNV.csv',index_col=0)
 
 
-os.chdir("C:\\Users\\jonat\\Documents\\Spring 2019 Classes\\4813\\BHI_data")
-labels = pd.read_csv('Label_selected.csv')
+    # optionally removes rows (features) that are all 0 across patients
+    if rem_zeros == True:
+        gene = gene.loc[~(gene==0).all(axis=1)]
+        miRNA = miRNA.loc[~(miRNA==0).all(axis=1)]
 
-ndx = labels.index[labels['label'] > -1].tolist() #gets indices of patients to use
-lbl = labels.iloc[ndx,[0,4]] #makes a new dataframe of patients to use (their IDs and survival response)
+    # splitting labels into train set and validation set
+    train_labels, test_labels, train_class, test_class = train_test_split(
+        lbl['case_id'], lbl, test_size=0.15, random_state=42)
 
-# miRNA dataset
-miRNA = pd.read_csv('miRNA_selected.csv') #reads in dataset
-miRNA = miRNA.set_index('miRNA_ID') #changes first column (miRNA_ID) to be indices of the dataframe
-miRNA = miRNA[lbl['case_id']] #indexes out the correct patient samples
-
-# gene expression dataset
-gene = pd.read_csv('GeneExp_selected.csv') #reads in dataset
-gene = gene.set_index(gene.columns[0]) #changes first column to be indices of the dataframe
-gene = gene[lbl['case_id']] #indexes out the correct patient samples
-
-
-# removes all non-coding transcripts from the mRNA dataset
-fixed_indicies = []
-for i in range(gene.shape[0]):
-    fixed_indicies.append(gene.index.values[i].split('.')[0])
-gene.index = fixed_indicies
-coding = pd.read_csv('pr_coding_feats.csv')
-keepers = list(coding['ensembl_gene_id'])
-keep_ndx = []
-for i in range(gene.shape[0]):
-    if gene.index.values[i] in keepers:
-        keep_ndx.append(i)
-gene = gene.iloc[keep_ndx,:]
+    # divides individual modalities into same train and test sets and transposes data frames
+    miRNA_train = miRNA[train_labels].T
+    miRNA_test = miRNA[test_labels].T
+    gene_train = gene[train_labels].T
+    gene_test = gene[test_labels].T
+    CNV_train = CNV[train_labels].T
+    CNV_test = CNV[test_labels].T
+    meth_train = meth[train_labels].T
+    meth_test = meth[test_labels].T
 
 
-# gene = pd.read_csv('gene.csv') #reads in dataset
-# gene = gene.set_index('ensg_ID')
+    # normalizing gene expression and miRNA datasets
+    miRNA_train_copy = pd.DataFrame(miRNA_train, copy=True) # copies the original dataframe
+    miRNA_scaler = preprocessing.RobustScaler().fit(miRNA_train)
+    miRNA_train = miRNA_scaler.transform(miRNA_train)
+    miRNA_train = pd.DataFrame(miRNA_train,columns=list(miRNA_train_copy)).set_index(miRNA_train_copy.index.values)
 
+    gene_train_copy = pd.DataFrame(gene_train, copy=True) # copies the original dataframe
+    gene_scaler = preprocessing.RobustScaler().fit(gene_train)
+    gene_train = gene_scaler.transform(gene_train)
+    gene_train = pd.DataFrame(gene_train,columns=list(gene_train_copy)).set_index(gene_train_copy.index.values)
 
-# CNV dataset
-CNV = pd.read_csv('CNV_selected.csv') #reads in dataset
-CNV = CNV.set_index('Gene_Symbol') #changes first column to be indices of the dataframe
-CNV = CNV[lbl['case_id']] #indexes out the correct patient samples
+    train_class = train_class.set_index('case_id') # changes first column to be indices
 
+    # do cross validation to get best classifiers and feature sets for each modality
+    # tr_ind(miRNA_train,train_class,'miRNA','mrmr') # fs + classification cv
+    tr_ind(gene_train,train_class,'gene','mrmr') # fs + classification cv
+    # tr_ind(meth_train,train_class,'meth','mrmr') # fs + classification cv
 
-# DNA methylation dataset
-meth = pd.read_csv('DnaMeth_selected.csv') #reads in dataset
-meth = meth.set_index('Composite Element REF') #changes first column to be indices of the dataframe
-meth = meth[lbl['case_id']] #indexes out the correct patient samples
-
-
-# removes rows (features) that are all 0 across patients
-gene = gene.loc[~(gene==0).all(axis=1)]
-miRNA = miRNA.loc[~(miRNA==0).all(axis=1)]
-
-# splitting labels into train set and validation set
-train_labels, test_labels, train_class, test_class = train_test_split(
-    lbl['case_id'], lbl, test_size=0.15, random_state=42)
-
-# divides individual modalities into same train and test sets and transposes data frames
-miRNA_train = miRNA[train_labels].T
-miRNA_test = miRNA[test_labels].T
-gene_train = gene[train_labels].T
-gene_test = gene[test_labels].T
-CNV_train = CNV[train_labels].T
-CNV_test = CNV[test_labels].T
-meth_train = meth[train_labels].T
-meth_test = meth[test_labels].T
-
-
-# normalizing gene expression and miRNA datasets
-miRNA_train_copy = pd.DataFrame(miRNA_train, copy=True) # copies the original dataframe
-miRNA_scaler = preprocessing.RobustScaler().fit(miRNA_train)
-miRNA_train = miRNA_scaler.transform(miRNA_train)
-miRNA_train = pd.DataFrame(miRNA_train,columns=list(miRNA_train_copy)).set_index(miRNA_train_copy.index.values)
-
-gene_train_copy = pd.DataFrame(gene_train, copy=True) # copies the original dataframe
-gene_scaler = preprocessing.RobustScaler().fit(gene_train)
-gene_train = gene_scaler.transform(gene_train)
-gene_train = pd.DataFrame(gene_train,columns=list(gene_train_copy)).set_index(gene_train_copy.index.values)
-
-
-train_class = train_class.set_index('case_id') # changes first column to be indices
-
-# tr_ind(miRNA_train,train_class,'miRNA','mrmr') # fs + classification cv
-tr_ind(gene_train,train_class,'gene','mrmr') # fs + classification cv
-# fs = select_features(meth_train,train_class,'meth','mrmr',30)
-# tr_ind(meth_train,train_class,'meth','mrmr') # fs + classification cv
-
-
+pipeline(True)
 
 
 

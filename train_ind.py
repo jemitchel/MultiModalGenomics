@@ -24,6 +24,7 @@ def tr_ind(X,y,type,f_sel):
 
     # compute average accuracy for each possible parameter combination
     tot_acc = []
+    best_params = []
 
     # parameters to test
     kernels = ['linear','rbf', 'sigmoid']
@@ -51,10 +52,25 @@ def tr_ind(X,y,type,f_sel):
             clf.fit(X_train, y_train.values.ravel())
             acc.append(clf.score(X_test,y_test))
             count = count + 1 # iterates to the next fold
-        print('kernel:%s, c-value:%f, num feats:%d' % (k, c, num_feats))
-        print(np.mean(acc))
+        # print('kernel:%s, c-value:%f, num feats:%d' % (k, c, num_feats))
+        # print(np.mean(acc))
         tot_acc.append(np.mean(acc))
+        best_params.append([k, c, num_feats])
     print(np.max(tot_acc))
+    ndx = np.argmax(tot_acc)
+    # print(ndx)
+    print(best_params[ndx])
+
+    final_pset = best_params[ndx]
+    feat_selected = select_features(X, y, type, f_sel, final_pset[2])
+    X = X[feat_selected]  # shrinks to have only selected features
+    clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True)
+    clf.fit(X, y.values.ravel())
+
+    return (clf,feat_selected)
+
+
+
 
 
 

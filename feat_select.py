@@ -99,4 +99,3 @@ def chi(X,y,n_feats):
     #         feats.append(list(X)[indicies[i]])
     # return feats
 
-

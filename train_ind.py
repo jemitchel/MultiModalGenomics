@@ -21,7 +21,7 @@ def tr_ind(X,y,type,f_sel):
         X_train, y_train = X.loc[tr_ndx, :], y.loc[tr_ndx, :]
 
         # feature selection for train data
-        feat_selected = select_features(X_train, y_train, type, f_sel, 20)
+        feat_selected = select_features(X_train, y_train, type, f_sel, 2)
         fold_feats.append(feat_selected)
 
     # compute average accuracy for each possible parameter combination
@@ -31,7 +31,7 @@ def tr_ind(X,y,type,f_sel):
     #     pass
     for k in kernels:
         for c in c_values:
-            for num_feats in [2,20]:
+            for num_feats in [2]:
                 count = 0
                 acc = []
                 for train,test in kf.split(X,y):

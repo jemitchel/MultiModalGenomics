@@ -29,16 +29,24 @@ fixed_indicies = []
 for i in range(gene.shape[0]):
     fixed_indicies.append(gene.index.values[i].split('.')[0])
 gene.index = fixed_indicies
-
 coding = pd.read_csv('pr_coding_feats.csv')
 keepers = list(coding['ensembl_gene_id'])
-gene = gene.loc[keepers,:]
+keep_ndx = []
+for i in range(gene.shape[0]):
+    if gene.index.values[i] in keepers:
+        keep_ndx.append(i)
+gene = gene.iloc[keep_ndx,:]
+
+
+# gene = pd.read_csv('gene.csv') #reads in dataset
+# gene = gene.set_index('ensg_ID')
 
 
 # CNV dataset
 CNV = pd.read_csv('CNV_selected.csv') #reads in dataset
 CNV = CNV.set_index('Gene_Symbol') #changes first column to be indices of the dataframe
 CNV = CNV[lbl['case_id']] #indexes out the correct patient samples
+
 
 # DNA methylation dataset
 meth = pd.read_csv('DnaMeth_selected.csv') #reads in dataset
@@ -65,10 +73,7 @@ meth_train = meth[train_labels].T
 meth_test = meth[test_labels].T
 
 
-# # normalizing gene expression and miRNA datasets
-# gene = gene.div(gene.max(axis=1), axis=0)
-# miRNA = miRNA.div(miRNA.max(axis=1), axis=0)
-
+# normalizing gene expression and miRNA datasets
 miRNA_train_copy = pd.DataFrame(miRNA_train, copy=True) # copies the original dataframe
 miRNA_scaler = preprocessing.RobustScaler().fit(miRNA_train)
 miRNA_train = miRNA_scaler.transform(miRNA_train)
@@ -82,7 +87,7 @@ gene_train = pd.DataFrame(gene_train,columns=list(gene_train_copy)).set_index(ge
 
 train_class = train_class.set_index('case_id') # changes first column to be indices
 
-# tr_ind(miRNA_train,train_class,'miRNA') # fs + classification cv
+# tr_ind(miRNA_train,train_class,'miRNA','mrmr') # fs + classification cv
 tr_ind(gene_train,train_class,'gene','mrmr') # fs + classification cv
 # fs = select_features(meth_train,train_class,'meth','mrmr',30)
 # tr_ind(meth_train,train_class,'meth','mrmr') # fs + classification cv

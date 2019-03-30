@@ -3,6 +3,7 @@ import os
 from sklearn.model_selection import train_test_split
 from train_ind import tr_ind
 from sklearn import preprocessing
+from feat_select import select_features
 
 def pipeline(rem_zeros):
 
@@ -53,9 +54,13 @@ def pipeline(rem_zeros):
     train_class = train_class.set_index('case_id') # changes first column to be indices
 
     # do cross validation to get best classifiers and feature sets for each modality
-    # tr_ind(miRNA_train,train_class,'miRNA','mrmr') # fs + classification cv
-    tr_ind(gene_train,train_class,'gene','mrmr') # fs + classification cv
+    tr_ind(miRNA_train,train_class,'miRNA','mrmr') # fs + classification cv
+    # tr_ind(gene_train,train_class,'gene','mrmr') # fs + classification cv
     # tr_ind(meth_train,train_class,'meth','mrmr') # fs + classification cv
+    # tr_ind(CNV_train,train_class,'CNV','chi-squared') # fs + classification cv
+    # select_features(CNV_train,train_class,'CNV','chi-squared',20) # fs + classification cv
+
+
 
 pipeline(True)
 

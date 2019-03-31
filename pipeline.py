@@ -56,13 +56,15 @@ def pipeline(rem_zeros):
     test_class = test_class.set_index('case_id') # changes first column to be indices
 
     # makes copies of the y dataframe because tr_ind alters it
-    train_class_copy1, train_class_copy2, train_class_copy3, train_class_copy4 = pd.DataFrame(train_class, copy=True),\
+    train_class_copy1,train_class_copy2,train_class_copy3,train_class_copy4,train_class_copy5 = pd.DataFrame(train_class, copy=True),\
+                                                                                 pd.DataFrame(train_class, copy=True),\
                                                                                  pd.DataFrame(train_class, copy=True),\
                                                                                  pd.DataFrame(train_class, copy=True),\
                                                                                  pd.DataFrame(train_class, copy=True)
-    # train_class_copy2 = pd.DataFrame(train_class, copy=True)
-    # train_class_copy3 = pd.DataFrame(train_class, copy=True)
-    # train_class_copy4 = pd.DataFrame(train_class, copy=True)
+    gene_train_copy2 = pd.DataFrame(gene_train, copy=True)
+    miRNA_train_copy2 = pd.DataFrame(miRNA_train, copy=True)
+    meth_train_copy2 = pd.DataFrame(meth_train, copy=True)
+    CNV_train_copy2 = pd.DataFrame(CNV_train, copy=True)
 
     # do cross validation to get best classifiers and feature sets for each modality
     clf_gene, fea_gene = tr_ind(gene_train,train_class_copy1,'gene','mrmr')
@@ -70,23 +72,24 @@ def pipeline(rem_zeros):
     clf_meth, fea_meth = tr_ind(meth_train,train_class_copy3,'meth','mrmr')
     clf_CNV, fea_CNV = tr_ind(CNV_train,train_class_copy4,'CNV','chi-squared')
 
-    # # select features
-    # miRNA_train = miRNA_train[fea_miRNA]
-    # gene_train = gene_train[fea_gene]
-    # meth_train = meth_train[fea_meth]
-    # CNV_train = CNV_train[fea_CNV]
-    #
-    # pred_miRNA = clf_miRNA.decision_function(miRNA_train)
-    # pred_gene = clf_gene.decision_function(gene_train)
-    # pred_meth = clf_meth.decision_function(meth_train)
-    # pred_CNV = clf_CNV.decision_function(CNV_train)
-    #
-    # new_feats = {'sample':miRNA_train.index.values,'miRNA':pred_miRNA, 'gene':pred_gene, 'meth':pred_meth, 'CNV':pred_CNV}
-    # new_feats = pd.DataFrame(data=new_feats)
-    # new_feats = new_feats.set_index('sample')
-    # print(new_feats)
-    #
-    # # tr_comb(new_feats,train_class)
+    # select features
+    miRNA_train_copy2 = miRNA_train_copy2[fea_miRNA]
+    gene_train_copy2 = gene_train_copy2[fea_gene]
+    meth_train_copy2 = meth_train_copy2[fea_meth]
+    CNV_train_copy2 = CNV_train_copy2[fea_CNV]
+
+    pred_miRNA = clf_miRNA.decision_function(miRNA_train_copy2)
+    pred_gene = clf_gene.decision_function(gene_train_copy2)
+    pred_meth = clf_meth.decision_function(meth_train_copy2)
+    pred_CNV = clf_CNV.decision_function(CNV_train_copy2)
+
+    new_feats = {'sample':miRNA_train.index.values,'miRNA':pred_miRNA, 'gene':pred_gene, 'meth':pred_meth, 'CNV':pred_CNV}
+    new_feats = pd.DataFrame(data=new_feats)
+    new_feats = new_feats.set_index('sample')
+    print(new_feats)
+    new_feats.to_csv('new_feats.csv')
+
+    # tr_comb(new_feats,train_class_copy5)
 
 
 

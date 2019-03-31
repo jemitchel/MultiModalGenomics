@@ -19,7 +19,9 @@ def tr_ind(X,y,type,f_sel):
         X_train, y_train = X.loc[tr_ndx, :], y.loc[tr_ndx, :]
 
         # feature selection for train data
-        feat_selected = select_features(X_train, y_train, type, f_sel, 10)
+        if type == 'meth':
+            cool = 9
+        feat_selected = select_features(X_train, y_train, type, f_sel, 5)
         fold_feats.append(feat_selected)
 
     # compute average accuracy for each possible parameter combination
@@ -27,9 +29,10 @@ def tr_ind(X,y,type,f_sel):
     best_params = []
 
     # parameters to test
-    kernels = ['linear','rbf', 'sigmoid']
-    c_values = [0.1,1,10]
-    feat_set_sizes = [2,5,10]
+    kernels = ['linear','rbf']
+    # kernels = ['linear','rbf', 'sigmoid']
+    c_values = [0.1,1]
+    feat_set_sizes = [2,5]
 
     para_list = [(k, c, num_feats) for k in kernels for c in c_values for num_feats in feat_set_sizes]
     for (k, c, num_feats) in para_list:
@@ -52,8 +55,8 @@ def tr_ind(X,y,type,f_sel):
             clf.fit(X_train, y_train.values.ravel())
             acc.append(clf.score(X_test,y_test))
             count = count + 1 # iterates to the next fold
-        # print('kernel:%s, c-value:%f, num feats:%d' % (k, c, num_feats))
-        # print(np.mean(acc))
+        print('kernel:%s, c-value:%f, num feats:%d' % (k, c, num_feats))
+        print(np.mean(acc))
         tot_acc.append(np.mean(acc))
         best_params.append([k, c, num_feats])
     print(np.max(tot_acc))

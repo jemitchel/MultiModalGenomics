@@ -26,7 +26,6 @@ def select_features(X,y,modality,method,n_feats):
         feat_selected = reduce(X, y, n_feats)
     elif method == 'chi-squared':
         feat_selected = chi(X, y, n_feats)
-        print(feat_selected)
 
     return (feat_selected)
 
@@ -73,7 +72,6 @@ def reduce(X,y,n_feats):
 
 def chi(X,y,n_feats):
     pvals = []
-    print(X.shape[1])
     #create contingency tables and run chi sq test
     for i in range(X.shape[1]):
         if i%10 == 0:

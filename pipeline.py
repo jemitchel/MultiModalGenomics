@@ -89,7 +89,7 @@ def pipeline(rem_zeros):
     print(new_feats)
     new_feats.to_csv('new_feats.csv')
 
-    # tr_comb(new_feats,train_class_copy5)
+    tr_comb(new_feats,train_class_copy5)
 
 
 

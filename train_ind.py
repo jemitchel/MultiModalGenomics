@@ -19,7 +19,7 @@ def tr_ind(X,y,type,f_sel):
         X_train, y_train = X.loc[tr_ndx, :], y.loc[tr_ndx, :]
 
         # feature selection for train data
-        feat_selected = select_features(X_train, y_train, type, f_sel, 10)
+        feat_selected = select_features(X_train, y_train, type, f_sel, 50)
         fold_feats.append(feat_selected)
 
     # compute average accuracy for each possible parameter combination
@@ -29,10 +29,10 @@ def tr_ind(X,y,type,f_sel):
     best_params = []
 
     # parameters to test
-    kernels = ['linear','rbf']
-    # kernels = ['linear','rbf', 'sigmoid']
-    c_values = [0.1,1]
-    feat_set_sizes = [2,5,10]
+    # kernels = ['linear','rbf']
+    kernels = ['linear','rbf','sigmoid']
+    c_values = [.001,0.1,1,10]
+    feat_set_sizes = [2,5,10,25,50]
 
     para_list = [(k, c, num_feats) for k in kernels for c in c_values for num_feats in feat_set_sizes]
     for (k, c, num_feats) in para_list:
@@ -66,7 +66,6 @@ def tr_ind(X,y,type,f_sel):
         best_fold.append(np.argmax(acc))
     print(np.max(tot_acc))
     ndx = np.argmax(tot_acc)
-    # print(ndx)
     print(best_params[ndx])
     final_pset = best_params[ndx]
     clf = tot_clfs[ndx][best_fold[ndx]]

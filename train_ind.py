@@ -7,6 +7,8 @@ import pandas as pd
 import csv
 import numpy as np
 import random
+from sklearn.metrics import roc_curve, auc
+
 
 # outputs a classifier and optimal features
 def tr_ind(X,y,type,f_sel):
@@ -29,10 +31,12 @@ def tr_ind(X,y,type,f_sel):
     best_params = []
 
     # parameters to test
-    # kernels = ['linear','rbf']
-    kernels = ['linear','rbf','sigmoid']
-    c_values = [.001,0.1,1,10]
-    feat_set_sizes = [2,5,10,25,50]
+    kernels = ['linear']
+    # kernels = ['linear','rbf','sigmoid']
+    # c_values = [.001,0.1,1,10]
+    c_values = [100]
+    # feat_set_sizes = [2,5,10,25,50]
+    feat_set_sizes = [50]
 
     para_list = [(k, c, num_feats) for k in kernels for c in c_values for num_feats in feat_set_sizes]
     for (k, c, num_feats) in para_list:
@@ -55,6 +59,11 @@ def tr_ind(X,y,type,f_sel):
             clf = svm.SVC(C=c,gamma="auto",kernel=k)
             clf.fit(X_train, y_train.values.ravel())
             acc.append(clf.score(X_test,y_test))
+            pred = clf.decision_function(X_test)
+            c1, c2, _ = roc_curve(y_test.values.ravel(), pred.ravel())
+            area = auc(c1, c2)
+            # acc.append(area)
+            print(area)
             clfs.append(clf)
             print(clf.predict(X_test))
             count = count + 1 # iterates to the next fold

@@ -5,6 +5,9 @@ from train_ind import tr_ind
 from sklearn import preprocessing
 from feat_select import select_features
 from train_comb import tr_comb
+from sklearn.metrics import roc_curve, auc
+from imblearn.over_sampling import SMOTE
+from collections import Counter
 
 def pipeline(rem_zeros):
 
@@ -55,41 +58,71 @@ def pipeline(rem_zeros):
     train_class = train_class.set_index('case_id') # changes first column to be indices
     test_class = test_class.set_index('case_id') # changes first column to be indices
 
+    # does this to over-represent the minority class
+    train_class_copy = pd.DataFrame(train_class, copy=True)
+    sm = SMOTE(random_state=42)
+    # gene_train.to_csv('gt1.csv')
+    # print(train_class)
+    # print(gene_train.head())
+    gene_train, train_class = sm.fit_resample(gene_train, train_class.values.ravel())
+    # gene_train = pd.DataFrame(gene_train,columns=list(gene_train_copy)).set_index(gene_train_copy.index.values)
+    # train_class = pd.DataFrame(train_class,columns=list(train_class_copy)).set_index(train_class_copy.index.values)
+    # gene_train = pd.DataFrame(gene_train)
+    gene_train = pd.DataFrame(gene_train,columns=list(gene_train_copy))
+    train_class = pd.DataFrame(train_class,columns=['label'])
+    # print(gene_train.head())
+    # gene_train.to_csv('gt2.csv')
+    # print(train_class)
+
+
     # makes copies of the y dataframe because tr_ind alters it
     train_class_copy1,train_class_copy2,train_class_copy3,train_class_copy4,train_class_copy5 = pd.DataFrame(train_class, copy=True),\
                                                                                  pd.DataFrame(train_class, copy=True),\
                                                                                  pd.DataFrame(train_class, copy=True),\
                                                                                  pd.DataFrame(train_class, copy=True),\
                                                                                  pd.DataFrame(train_class, copy=True)
+
     gene_train_copy2 = pd.DataFrame(gene_train, copy=True)
-    miRNA_train_copy2 = pd.DataFrame(miRNA_train, copy=True)
-    meth_train_copy2 = pd.DataFrame(meth_train, copy=True)
-    CNV_train_copy2 = pd.DataFrame(CNV_train, copy=True)
+    # miRNA_train_copy2 = pd.DataFrame(miRNA_train, copy=True)
+    # meth_train_copy2 = pd.DataFrame(meth_train, copy=True)
+    # CNV_train_copy2 = pd.DataFrame(CNV_train, copy=True)
+    #
+    # # do cross validation to get best classifiers and feature sets for each modality
+    clf_gene, fea_gene = tr_ind(gene_train,train_class_copy1,'gene','ttest')
+    # clf_miRNA, fea_miRNA = tr_ind(miRNA_train,train_class_copy2,'miRNA','mrmr')
+    # clf_meth, fea_meth = tr_ind(meth_train,train_class_copy3,'meth','mrmr')
+    # clf_CNV, fea_CNV = tr_ind(CNV_train,train_class_copy4,'CNV','chi-squared')
+    #
+    # # select features
+    # miRNA_train_copy2 = miRNA_train_copy2[fea_miRNA]
+    # gene_train_copy2 = gene_train_copy2[fea_gene]
+    # meth_train_copy2 = meth_train_copy2[fea_meth]
+    # CNV_train_copy2 = CNV_train_copy2[fea_CNV]
+    gene_test = gene_test[fea_gene]
+    #
+    # pred_miRNA = clf_miRNA.decision_function(miRNA_train_copy2)
+    # pred_gene = clf_gene.decision_function(gene_train_copy2)
+    # pred_meth = clf_meth.decision_function(meth_train_copy2)
+    # pred_CNV = clf_CNV.decision_function(CNV_train_copy2)
+    pred_gene = clf_gene.decision_function(gene_test)
+    print(pred_gene)
+    print(clf_gene.predict(gene_test))
+    c1,c2,_ = roc_curve(test_class.values.ravel(), pred_gene.ravel())
+    print(auc(c1, c2))
+    print(clf_gene.score(gene_test,test_class))
+    #
+    # new_feats = {'sample':miRNA_train.index.values,'miRNA':pred_miRNA, 'gene':pred_gene, 'meth':pred_meth, 'CNV':pred_CNV}
+    # new_feats = pd.DataFrame(data=new_feats)
+    # new_feats = new_feats.set_index('sample')
+    # print(new_feats)
+    # new_feats.to_csv('new_feats.csv')
 
-    # do cross validation to get best classifiers and feature sets for each modality
-    clf_gene, fea_gene = tr_ind(gene_train,train_class_copy1,'gene','mrmr')
-    clf_miRNA, fea_miRNA = tr_ind(miRNA_train,train_class_copy2,'miRNA','mrmr')
-    clf_meth, fea_meth = tr_ind(meth_train,train_class_copy3,'meth','mrmr')
-    clf_CNV, fea_CNV = tr_ind(CNV_train,train_class_copy4,'CNV','chi-squared')
+    # tr_comb(new_feats,train_class_copy5)
 
-    # select features
-    miRNA_train_copy2 = miRNA_train_copy2[fea_miRNA]
-    gene_train_copy2 = gene_train_copy2[fea_gene]
-    meth_train_copy2 = meth_train_copy2[fea_meth]
-    CNV_train_copy2 = CNV_train_copy2[fea_CNV]
 
-    pred_miRNA = clf_miRNA.decision_function(miRNA_train_copy2)
-    pred_gene = clf_gene.decision_function(gene_train_copy2)
-    pred_meth = clf_meth.decision_function(meth_train_copy2)
-    pred_CNV = clf_CNV.decision_function(CNV_train_copy2)
-
-    new_feats = {'sample':miRNA_train.index.values,'miRNA':pred_miRNA, 'gene':pred_gene, 'meth':pred_meth, 'CNV':pred_CNV}
-    new_feats = pd.DataFrame(data=new_feats)
-    new_feats = new_feats.set_index('sample')
-    print(new_feats)
-    new_feats.to_csv('new_feats.csv')
-
-    tr_comb(new_feats,train_class_copy5)
+    # fts = pd.read_csv('new_feats.csv')
+    # c1,c2,_ = roc_curve(train_class_copy5.values.ravel(), fts['gene'].ravel())
+    # print(auc(c1, c2))
 
 
 

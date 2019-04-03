@@ -8,7 +8,7 @@ def select_features(X,y,modality,method,n_feats):
 
     if method == 'mrmr':
         if modality == 'gene' or modality == 'meth': #for these doing prefiltering with ttest
-            init_feats = reduce(X, y, 2000)
+            init_feats = reduce(X, y, 500)
             X = X.loc[:, init_feats]
         elif modality == 'CNV':
             init_feats = chi(X, y, 2000)

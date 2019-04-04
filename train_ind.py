@@ -22,7 +22,7 @@ def tr_ind(X,y,type,f_sel,seed):
         X_train, y_train = X.loc[tr_ndx, :], y.loc[tr_ndx, :]
 
         # feature selection for train data
-        feat_selected = select_features(X_train, y_train, type, f_sel, 10)
+        feat_selected = select_features(X_train, y_train, type, f_sel, 50)
         fold_feats.append(feat_selected)
 
     # compute average accuracy for each possible parameter combination
@@ -34,9 +34,9 @@ def tr_ind(X,y,type,f_sel,seed):
     # parameters to test
     kernels = ['linear','rbf']
     # kernels = ['linear','rbf','sigmoid']
-    c_values = [0.1,1]
+    c_values = [0.1,1,10]
     # c_values = [.1,1,10,100]
-    feat_set_sizes = [5,10]
+    feat_set_sizes = [5,10,25,50]
     # feat_set_sizes = [2,5,10,20,50,100]
 
     para_list = [(k, c, num_feats) for k in kernels for c in c_values for num_feats in feat_set_sizes]

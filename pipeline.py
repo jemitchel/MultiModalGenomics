@@ -72,6 +72,14 @@ def pipeline(rem_zeros):
     test_class = test_class.set_index('case_id') # changes first column to be indices
 
     # for doing quantile scaling instead
+    q1 = gene_train.quantile(.25)
+    q2 = gene_train.quantile(.5)
+    q3 = gene_train.quantile(.75)
+    gene_train_copy2 = pd.DataFrame(gene_train, copy=True)
+    gene_train_copy2[gene_train <= q1] = -2
+    gene_train_copy2[(gene_train > q1) & (gene_train <= q2)] = -1
+    gene_train_copy2[(gene_train > q2) & (gene_train <= q3)] = 1
+    gene_train_copy2[gene_train > q3] = 2
 
 
     # # does this to over-represent the minority class
@@ -91,21 +99,21 @@ def pipeline(rem_zeros):
 
 
 
-    # gene_train_copy2 = pd.DataFrame(gene_train, copy=True)
+    gene_train_copy3 = pd.DataFrame(gene_train_copy2, copy=True)
     # miRNA_train_copy2 = pd.DataFrame(miRNA_train, copy=True)
     # miRNA_train_copy2.to_csv('test.csv')
     # meth_train_copy2 = pd.DataFrame(meth_train, copy=True)
     # CNV_train_copy2 = pd.DataFrame(CNV_train, copy=True)
 
-    gen_curve(gene_train,train_class,gene_test,test_class,'gene',10)
+    # gen_curve(gene_train,train_class,gene_test,test_class,'gene',5)
     # # do cross validation to get best classifiers and feature sets for each modality
     # clf_gene, fea_gene = tr_ind(gene_train,train_class_copy1,'gene','ttest')
     # clf_miRNA, fea_miRNA = tr_ind(miRNA_train,train_class_copy2,'miRNA','mrmr')
     # clf_meth, fea_meth = tr_ind(meth_train,train_class_copy3,'meth','mrmr')
     # clf_CNV, fea_CNV = tr_ind(CNV_train,train_class_copy4,'CNV','chi-squared')
 
-    # feat_selected = select_features(gene_train, train_class_copy1, 'gene', 'ttest', 10)
-    # gene_train_copy2 = gene_train_copy2[feat_selected]
+    feat_selected = select_features(gene_train_copy2, train_class_copy1, 'gene', 'chi-squared', 10)
+    gene_train_copy3 = gene_train_copy3[feat_selected]
     # clf = svm.SVC(C=100, gamma="auto", kernel='rbf')
     # clf.fit(gene_train_copy2, train_class_copy5.values.ravel())
     # gene_test = gene_test[feat_selected]
@@ -115,8 +123,9 @@ def pipeline(rem_zeros):
     # c1,c2,_ = roc_curve(test_class.values.ravel(), clf.decision_function(gene_test).ravel())
     # print(auc(c1, c2))
 
-    # gene_train_copy2.to_csv('feature_vis3.csv')
-    # train_class.to_csv('group3.csv')
+    os.chdir("D:\\4813")
+    gene_train_copy3.to_csv('feature_vis4.csv')
+    train_class.to_csv('group4.csv')
     #
     # # select features
     # miRNA_train_copy2 = miRNA_train_copy2[fea_miRNA]

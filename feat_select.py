@@ -2,13 +2,14 @@ import pandas as pd
 import pymrmr
 import numpy as np
 from scipy.stats import ttest_ind
-from scipy.stats import chi2_contingency
+# from scipy.stats import chi2_contingency
+from sklearn.feature_selection import chi2
 
 def select_features(X,y,modality,method,n_feats):
 
     if method == 'mrmr':
         if modality == 'gene' or modality == 'meth': #for these doing prefiltering with ttest
-            init_feats = reduce(X, y, 400)
+            init_feats = reduce(X, y, 2000)
             X = X.loc[:, init_feats]
         elif modality == 'CNV':
             init_feats = chi(X, y, 2000)
@@ -71,20 +72,28 @@ def reduce(X,y,n_feats):
     return feats
 
 def chi(X,y,n_feats):
-    pvals = []
-    #create contingency tables and run chi sq test
-    for i in range(X.shape[1]):
-        if i%10 == 0:
-            print(i)
-        c_table = pd.crosstab(y['label'],X.iloc[:,i])
-        pv = chi2_contingency(c_table)[1]
-        pvals.append(pv)
+    # pvals = []
+    # #create contingency tables and run chi sq test
+    # for i in range(X.shape[1]):
+    #     if i%10 == 0:
+    #         print(i)
+    #     c_table = pd.crosstab(y['label'],X.iloc[:,i])
+    #     pv = chi2_contingency(c_table)[1]
+    #     pvals.append(pv)
+    #
+    # feats = []
+    # indicies = np.argsort(pvals)
+    # for i in range(len(indicies)):
+    #     if i < n_feats:
+    #         feats.append(list(X)[indicies[i]])
 
+    _,pvals = chi2(X,y)
     feats = []
     indicies = np.argsort(pvals)
     for i in range(len(indicies)):
         if i < n_feats:
             feats.append(list(X)[indicies[i]])
+            # print(pvals[indicies[i]])
     return feats
 
 

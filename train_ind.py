@@ -21,8 +21,19 @@ def tr_ind(X,y,type,f_sel,seed):
         tr_ndx = X.index.values[train]
         X_train, y_train = X.loc[tr_ndx, :], y.loc[tr_ndx, :]
 
+        if type == 'gene' and f_sel == 'chi-squared':
+            X_train_copy2 = pd.DataFrame(X_train, copy=True)
+            q1 = X_train_copy2.quantile(.25)
+            q2 = X_train_copy2.quantile(.5)
+            q3 = X_train_copy2.quantile(.75)
+            X_train[X_train_copy2 <= q1] = 1
+            X_train[(X_train_copy2 > q1) & (X_train_copy2 <= q2)] = 2
+            X_train[(X_train_copy2 > q2) & (X_train_copy2 <= q3)] = 3
+            X_train[X_train_copy2 > q3] = 4
+
         # feature selection for train data
         feat_selected = select_features(X_train, y_train, type, f_sel, 50)
+        print(feat_selected)
         fold_feats.append(feat_selected)
 
     # compute average accuracy for each possible parameter combination
@@ -32,12 +43,12 @@ def tr_ind(X,y,type,f_sel,seed):
     best_params = []
 
     # parameters to test
-    kernels = ['linear','rbf']
+    kernels = ['linear']
     # kernels = ['linear','rbf','sigmoid']
-    c_values = [0.1,1,10]
-    # c_values = [.1,1,10,100]
-    feat_set_sizes = [5,10,25,50]
-    # feat_set_sizes = [2,5,10,20,50,100]
+    # c_values = [0.1,1,10]
+    c_values = [.1,1,10,100]
+    # feat_set_sizes = [5,10,25,50]
+    feat_set_sizes = [2,5,10,20,50]
 
     para_list = [(k, c, num_feats) for k in kernels for c in c_values for num_feats in feat_set_sizes]
     for (k, c, num_feats) in para_list:

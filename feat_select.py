@@ -26,6 +26,7 @@ def select_features(X,y,modality,method,n_feats):
     elif method == 'ttest':
         feat_selected = reduce(X, y, n_feats)
     elif method == 'chi-squared':
+        X,y = discretize(X,y,modality,1)
         feat_selected = chi(X, y, n_feats)
 
     return (feat_selected)
@@ -33,9 +34,10 @@ def select_features(X,y,modality,method,n_feats):
 def discretize(X,y,modality,n): #features need to be -2,0,2 and response needs to be -1,1
     # discretizes feature data
     if modality == 'CNV':
-        X[X == -1] = -2
-        X[X == 0] = 0
-        X[X == 1] = 2
+        X2 = pd.DataFrame(X, copy=True)
+        X[X2 == -1] = 0
+        X[X2 == 0] = 1
+        X[X2 == 1] = 2
     else:
         # get trimmed mean and trimmed standard deviation each row column (since features are now columns)
         # gets mean and std of each feature excluding outliers

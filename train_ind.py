@@ -1,6 +1,7 @@
 from sklearn import svm
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import StratifiedKFold
+from sklearn.model_selection import KFold
 from feat_select import select_features
 from feat_select import discretize
 import pandas as pd
@@ -13,9 +14,10 @@ from sklearn.metrics import f1_score
 
 # outputs a classifier and optimal features
 def tr_ind(X,y,type,f_sel,seed):
-
+    print('this is the seed: %s'%seed)
     # manually doing grid search cross-validation
     kf = StratifiedKFold(n_splits=4, shuffle=True, random_state=seed)
+    # kf = KFold(n_splits=4, shuffle=True, random_state=seed)
     fold_feats = []
     for train, test in kf.split(X, y):
         tr_ndx = X.index.values[train]
@@ -43,12 +45,12 @@ def tr_ind(X,y,type,f_sel,seed):
     best_params = []
 
     # parameters to test
-    kernels = ['linear']
-    # kernels = ['linear','rbf','sigmoid']
-    # c_values = [0.1,1,10]
+    # kernels = ['linear']
+    kernels = ['linear','rbf','sigmoid']
+    # c_values = [0.1]
     c_values = [.1,1,10,100]
-    # feat_set_sizes = [5,10,25,50]
-    feat_set_sizes = [2,5,10,20,50]
+    feat_set_sizes = [5,10,25,50]
+    # feat_set_sizes = [20]
 
     para_list = [(k, c, num_feats) for k in kernels for c in c_values for num_feats in feat_set_sizes]
     for (k, c, num_feats) in para_list:
@@ -71,11 +73,15 @@ def tr_ind(X,y,type,f_sel,seed):
             # clf = svm.SVC(C=c,gamma="auto",kernel=k,class_weight={0:.3, 1:.7})
             clf = svm.SVC(C=c,gamma="auto",kernel=k,class_weight='balanced')
             # clf = svm.SVC(C=c,gamma="auto",kernel=k)
+            # X_train.to_csv('XT.csv')
+            # y_train.to_csv('yt.csv')
+            # X_test.to_csv('XTe.csv')
+            # y_test.to_csv('yte.csv')
             clf.fit(X_train, y_train.values.ravel())
-            # acc.append(clf.score(X_test,y_test))
+            acc.append(clf.score(X_test,y_test))
             fsc = f1_score(y_test,clf.predict(X_test))
             # print(fsc)
-            acc.append(fsc)
+            # acc.append(fsc)
             # pred = clf.decision_function(X_test)
             # c1, c2, _ = roc_curve(y_test.values.ravel(), pred.ravel())
             # area = auc(c1, c2)

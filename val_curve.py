@@ -14,7 +14,10 @@ def gen_curve(X_train,y_train,X_test,y_test,type,n_times):
         y_train_copy = pd.DataFrame(y_train, copy=True)
         X_test_copy = pd.DataFrame(X_test, copy=True)
         seed = random.randint(1, 10000)
-        clf, feat_selected, mx = tr_ind(X_train_copy,y_train_copy,type,'ttest',seed)
+        if type == 'CNV':
+            clf, feat_selected, mx = tr_ind(X_train_copy, y_train_copy, type, 'chi-squared', seed)
+        else:
+            clf, feat_selected, mx = tr_ind(X_train_copy, y_train_copy, type, 'ttest', seed)
         X_test_copy = X_test_copy[feat_selected]
         acc = clf.score(X_test_copy,y_test)
         pt_x.append(mx)

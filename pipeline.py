@@ -49,6 +49,15 @@ def pipeline(rem_zeros):
     meth_train = meth[train_labels].T
     meth_test = meth[test_labels].T
 
+    meth_train = meth_train.dropna(axis='columns')
+    meth_test = meth_test.dropna(axis='columns')
+    miRNA_train = miRNA_train.dropna(axis='columns')
+    miRNA_test = miRNA_test.dropna(axis='columns')
+    gene_train = gene_train.dropna(axis='columns')
+    gene_test = gene_test.dropna(axis='columns')
+    CNV_train = CNV_train.dropna(axis='columns')
+    CNV_test = CNV_test.dropna(axis='columns')
+
 
 
 
@@ -57,6 +66,10 @@ def pipeline(rem_zeros):
     miRNA_scaler = preprocessing.MinMaxScaler().fit(miRNA_train)
     miRNA_train = miRNA_scaler.transform(miRNA_train)
     miRNA_train = pd.DataFrame(miRNA_train,columns=list(miRNA_train_copy)).set_index(miRNA_train_copy.index.values)
+
+    miRNA_test_copy = pd.DataFrame(miRNA_test, copy=True)  # copies the original dataframe
+    miRNA_test = miRNA_scaler.transform(miRNA_test)
+    miRNA_test = pd.DataFrame(miRNA_test, columns=list(miRNA_test_copy)).set_index(miRNA_test_copy.index.values)
 
     gene_train_copy = pd.DataFrame(gene_train, copy=True) # copies the original dataframe
     # gene_scaler = preprocessing.QuantileTransformer(output_distribution='normal').fit(gene_train)
@@ -67,6 +80,15 @@ def pipeline(rem_zeros):
     gene_test_copy = pd.DataFrame(gene_test, copy=True)  # copies the original dataframe
     gene_test = gene_scaler.transform(gene_test)
     gene_test = pd.DataFrame(gene_test, columns=list(gene_test_copy)).set_index(gene_test_copy.index.values)
+
+    # meth_train_copy = pd.DataFrame(meth_train, copy=True) # copies the original dataframe
+    # meth_scaler = preprocessing.MinMaxScaler().fit(meth_train)
+    # meth_train = meth_scaler.transform(meth_train)
+    # meth_train = pd.DataFrame(meth_train,columns=list(meth_train_copy)).set_index(meth_train_copy.index.values)
+    #
+    # meth_test_copy = pd.DataFrame(meth_test, copy=True)  # copies the original dataframe
+    # meth_test = meth_scaler.transform(meth_test)
+    # meth_test = pd.DataFrame(meth_test, columns=list(meth_test_copy)).set_index(meth_test_copy.index.values)
 
     train_class = train_class.set_index('case_id') # changes first column to be indices
     test_class = test_class.set_index('case_id') # changes first column to be indices
@@ -100,6 +122,7 @@ def pipeline(rem_zeros):
 
 
 
+
     # gene_train_copy3 = pd.DataFrame(gene_train_copy2, copy=True)
     # miRNA_train_copy2 = pd.DataFrame(miRNA_train, copy=True)
     # miRNA_train_copy2.to_csv('test.csv')
@@ -107,14 +130,20 @@ def pipeline(rem_zeros):
     # CNV_train_copy2 = pd.DataFrame(CNV_train, copy=True)
     # gene_train_copy2 = pd.DataFrame(gene_train, copy=True)
 
-    gen_curve(gene_train,train_class,gene_test,test_class,'gene',4)
+    # gen_curve(gene_train,train_class,gene_test,test_class,'gene',1)
+    # gen_curve(miRNA_train,train_class,miRNA_test,test_class,'miRNA',4)
+    # gen_curve(CNV_train,train_class,CNV_test,test_class,'CNV',4)
+    gen_curve(meth_train,train_class,meth_test,test_class,'meth',4)
     # # do cross validation to get best classifiers and feature sets for each modality
     # clf_gene, fea_gene = tr_ind(gene_train,train_class_copy1,'gene','ttest')
     # clf_miRNA, fea_miRNA = tr_ind(miRNA_train,train_class_copy2,'miRNA','mrmr')
-    # clf_meth, fea_meth = tr_ind(meth_train,train_class_copy3,'meth','mrmr')
+    # clf_meth, fea_meth, mx = tr_ind(meth_train,train_class,'meth','ttest',5)
     # clf_CNV, fea_CNV = tr_ind(CNV_train,train_class_copy4,'CNV','chi-squared')
-    # feat = select_features(gene_train_copy2, train_class, 'gene', 'chi-squared', 10)
-    # feats = select_features(gene_train, train_class, 'gene', 'ttest', 10)
+    # feat = select_features(meth_train, train_class, 'meth', 'ttest', 20)
+    # print(feat)
+    # print(feat)
+    # feats = select_features(CNV_train, train_class, 'CNV', 'chi-squared', 10)
+    # print(feats)
     # gene_train_copy3 = gene_train_copy3[feat_selected]
     # clf = svm.SVC(C=100, gamma="auto", kernel='rbf')
     # clf.fit(gene_train_copy2, train_class_copy5.values.ravel())

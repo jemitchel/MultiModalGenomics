@@ -34,7 +34,7 @@ def tr_ind(X,y,type,f_sel,seed):
             X_train[X_train_copy2 > q3] = 4
 
         # feature selection for train data
-        feat_selected = select_features(X_train, y_train, type, f_sel, 50)
+        feat_selected = select_features(X_train, y_train, type, f_sel, 100)
         print(feat_selected)
         fold_feats.append(feat_selected)
 
@@ -49,7 +49,7 @@ def tr_ind(X,y,type,f_sel,seed):
     kernels = ['linear','rbf','sigmoid']
     # c_values = [0.1]
     c_values = [.1,1,10,100]
-    feat_set_sizes = [5,10,25,50]
+    feat_set_sizes = [5,10,25,50,100]
     # feat_set_sizes = [20]
 
     para_list = [(k, c, num_feats) for k in kernels for c in c_values for num_feats in feat_set_sizes]
@@ -112,13 +112,11 @@ def tr_ind(X,y,type,f_sel,seed):
     feat_selected = select_features(X, y, type, f_sel, final_pset[2])
     X_copy = X_copy[feat_selected]  # shrinks to have only selected features
     # clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True,class_weight={0:.3, 1:.7})
-    clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True,class_weight='balanced')
-    # clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True)
+    clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True,class_weight='balanced')    # clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True)
     clf.fit(X_copy, y_copy.values.ravel())
     mx = clf.score(X_copy,y_copy.values.ravel())
 
     return (clf,feat_selected,mx)
-
 
 
 

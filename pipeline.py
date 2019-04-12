@@ -5,6 +5,7 @@ from train_ind import tr_ind
 from sklearn import preprocessing
 from feat_select import select_features
 from train_comb import tr_comb
+from train_comb import maj_vote
 from sklearn.metrics import roc_curve, auc
 from imblearn.over_sampling import SMOTE
 from collections import Counter
@@ -39,6 +40,13 @@ def pipeline(rem_zeros):
     train_labels, test_labels, train_class, test_class = train_test_split(
         lbl['case_id'], lbl, test_size=0.15, random_state=42)
 
+    # removes features (rows) that have any na in them
+    meth = meth.dropna(axis='rows')
+    miRNA = miRNA.dropna(axis='rows')
+    gene = gene.dropna(axis='rows')
+    CNV = CNV.dropna(axis='rows')
+
+
     # divides individual modalities into same train and test sets and transposes data frames
     miRNA_train = miRNA[train_labels].T
     miRNA_test = miRNA[test_labels].T
@@ -48,17 +56,6 @@ def pipeline(rem_zeros):
     CNV_test = CNV[test_labels].T
     meth_train = meth[train_labels].T
     meth_test = meth[test_labels].T
-
-    meth_train = meth_train.dropna(axis='columns')
-    meth_test = meth_test.dropna(axis='columns')
-    miRNA_train = miRNA_train.dropna(axis='columns')
-    miRNA_test = miRNA_test.dropna(axis='columns')
-    gene_train = gene_train.dropna(axis='columns')
-    gene_test = gene_test.dropna(axis='columns')
-    CNV_train = CNV_train.dropna(axis='columns')
-    CNV_test = CNV_test.dropna(axis='columns')
-
-
 
 
     # normalizing gene expression and miRNA datasets
@@ -72,7 +69,6 @@ def pipeline(rem_zeros):
     miRNA_test = pd.DataFrame(miRNA_test, columns=list(miRNA_test_copy)).set_index(miRNA_test_copy.index.values)
 
     gene_train_copy = pd.DataFrame(gene_train, copy=True) # copies the original dataframe
-    # gene_scaler = preprocessing.QuantileTransformer(output_distribution='normal').fit(gene_train)
     gene_scaler = preprocessing.MinMaxScaler().fit(gene_train)
     gene_train = gene_scaler.transform(gene_train)
     gene_train = pd.DataFrame(gene_train,columns=list(gene_train_copy)).set_index(gene_train_copy.index.values)
@@ -134,10 +130,10 @@ def pipeline(rem_zeros):
     # gen_curve(CNV_train,train_class,CNV_test,test_class,'CNV',4)
     # gen_curve(meth_train,train_class,meth_test,test_class,'meth',4)
     # # do cross validation to get best classifiers and feature sets for each modality
-    clf_gene, fea_gene, _ = tr_ind(gene_train,train_class_copy1,'gene','ttest',95)
-    clf_miRNA, fea_miRNA, _ = tr_ind(miRNA_train,train_class_copy2,'miRNA','ttest',453)
-    clf_meth, fea_meth, _ = tr_ind(meth_train,train_class_copy3,'meth','ttest',555)
-    clf_CNV, fea_CNV, _ = tr_ind(CNV_train,train_class_copy4,'CNV','chi-squared',2094)
+    clf_gene, fea_gene, _ = tr_ind(gene_train,train_class_copy1,'gene','ttest',5)
+    clf_miRNA, fea_miRNA, _ = tr_ind(miRNA_train,train_class_copy2,'miRNA','ttest',5)
+    clf_meth, fea_meth, _ = tr_ind(meth_train,train_class_copy3,'meth','ttest',5)
+    clf_CNV, fea_CNV, _ = tr_ind(CNV_train,train_class_copy4,'CNV','chi-squared',5)
     # feat = select_features(meth_train, train_class, 'meth', 'ttest', 20)
     # print(feat)
     # print(feat)
@@ -175,7 +171,8 @@ def pipeline(rem_zeros):
     # print(auc(c1, c2))
     # print(clf_gene.score(gene_test,test_class))
     #
-    new_feats = {'sample':miRNA_train.index.values,'miRNA':pred_miRNA, 'gene':pred_gene, 'meth':pred_meth, 'CNV':pred_CNV}
+    # new_feats = {'sample':miRNA_train.index.values,'miRNA':pred_miRNA, 'gene':pred_gene, 'meth':pred_meth, 'CNV':pred_CNV}
+    new_feats = {'sample':miRNA_train.index.values,'gene':pred_gene, 'CNV':pred_CNV, 'meth':pred_meth}
     new_feats = pd.DataFrame(data=new_feats)
     new_feats = new_feats.set_index('sample')
     # print(new_feats)
@@ -197,11 +194,15 @@ def pipeline(rem_zeros):
     pred_meth = clf_meth.decision_function(meth_test)
     pred_CNV = clf_CNV.decision_function(CNV_test)
 
-    fin1 = clf_gene.score(gene_test,test_class)
+    # gets results from predicting on validation set with individual modalities
+    gene_ind_res = clf_gene.score(gene_test,test_class)
+    meth_ind_res = clf_meth.score(meth_test,test_class)
+    CNV_ind_res = clf_CNV.score(CNV_test,test_class)
+    miRNA_ind_res = clf_miRNA.score(miRNA_test,test_class)
 
-
-    new_feats_val = {'sample': miRNA_test.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
-                 'CNV': pred_CNV}
+    # new_feats_val = {'sample': miRNA_test.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
+    #              'CNV': pred_CNV}
+    new_feats_val = {'sample': miRNA_test.index.values,'gene': pred_gene,'CNV': pred_CNV,'meth':pred_meth}
     new_feats_val = pd.DataFrame(data=new_feats_val)
     new_feats_val = new_feats_val.set_index('sample')
     print(new_feats_val.head())
@@ -210,9 +211,16 @@ def pipeline(rem_zeros):
     pred = clf.decision_function(new_feats_val)
     c1, c2, _ = roc_curve(test_class.values.ravel(), pred.ravel())
     area = auc(c1, c2)
-    print(fin1)
-    print(area)
-    print(fin)
+    # fin = maj_vote(new_feats_val,test_class)
+    print('gene individual result:',gene_ind_res)
+    print('meth individual result:',meth_ind_res)
+    print('CNV individual result:',CNV_ind_res)
+    print('miRNA individual result:',miRNA_ind_res)
+    print('auc',area)
+    print('integration result',fin)
+
+    # new_feats_val.to_csv('nfval.csv')
+    # test_class.to_csv('testresp.csv')
 
 
     # fts = pd.read_csv('new_feats.csv')

@@ -9,11 +9,13 @@ import csv
 import numpy as np
 import random
 import os
+from sklearn.metrics import f1_score
 
-# loads precomputed features and response
-os.chdir("C:\\Users\\jonat\\Documents\\Spring 2019 Classes\\4813\\Processed_data")
-new_feats = pd.read_csv('new_feats.csv', index_col=0)
-new_feats_labels = pd.read_csv('new_feats_labels.csv', index_col=0)
+
+# # loads precomputed features and response
+# os.chdir("C:\\Users\\jonat\\Documents\\Spring 2019 Classes\\4813\\Processed_data")
+# new_feats = pd.read_csv('new_feats.csv', index_col=0)
+# new_feats_labels = pd.read_csv('new_feats_labels.csv', index_col=0)
 
 # outputs a classifier and optimal features
 def tr_comb(X,y):
@@ -38,6 +40,8 @@ def tr_comb(X,y):
             clf = svm.SVC(C=c, gamma="auto", kernel=k)
             clf.fit(X_train, y_train.values.ravel())
             acc.append(clf.score(X_test,y_test))
+            fsc = f1_score(y_test, clf.predict(X_test))
+            # acc.append(fsc)
         tot_acc.append(np.mean(acc))
         best_params.append([k, c])
         # print(np.mean(acc))
@@ -51,4 +55,29 @@ def tr_comb(X,y):
 
     return (clf)
 
-# tr_comb(new_feats,new_feats_labels)
+def maj_vote(X,y):
+    # this run directly with the test set. no cross validation used
+    n_modes = X.shape[1]
+    pred = []
+    for i in range(X.shape[0]):
+        tot = 0
+        for j in range(X.shape[1]):
+            if X.iloc[i,j] < 0:
+                tot += 1
+        if tot >= 2:
+            pred.append(0)
+        else:
+            pred.append(1)
+
+    correct = 0
+    for i in range(len(pred)):
+        if pred[i] == y.iloc[i,0]:
+            correct += 1
+
+    print(pred)
+    print(y)
+    score = correct/len(pred)
+    # print(score)
+
+    return score
+

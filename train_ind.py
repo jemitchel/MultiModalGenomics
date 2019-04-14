@@ -16,25 +16,16 @@ from sklearn.metrics import f1_score
 def tr_ind(X,y,type,f_sel,seed):
     print('this is the seed: %s'%seed)
     # manually doing grid search cross-validation
-    kf = StratifiedKFold(n_splits=4, shuffle=True, random_state=seed)
+    n_folds = 8
+    kf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
     # kf = KFold(n_splits=4, shuffle=True, random_state=seed)
     fold_feats = []
     for train, test in kf.split(X, y):
         tr_ndx = X.index.values[train]
         X_train, y_train = X.loc[tr_ndx, :], y.loc[tr_ndx, :]
 
-        if type == 'gene' and f_sel == 'chi-squared':
-            X_train_copy2 = pd.DataFrame(X_train, copy=True)
-            q1 = X_train_copy2.quantile(.25)
-            q2 = X_train_copy2.quantile(.5)
-            q3 = X_train_copy2.quantile(.75)
-            X_train[X_train_copy2 <= q1] = 1
-            X_train[(X_train_copy2 > q1) & (X_train_copy2 <= q2)] = 2
-            X_train[(X_train_copy2 > q2) & (X_train_copy2 <= q3)] = 3
-            X_train[X_train_copy2 > q3] = 4
-
         # feature selection for train data
-        feat_selected = select_features(X_train, y_train, type, f_sel, 100)
+        feat_selected = select_features(X_train, y_train, type, f_sel, 1000)
         print(feat_selected)
         fold_feats.append(feat_selected)
 
@@ -48,9 +39,15 @@ def tr_ind(X,y,type,f_sel,seed):
     # kernels = ['linear']
     kernels = ['linear','rbf','sigmoid']
     # c_values = [0.1]
-    c_values = [.1,1,10,100]
-    feat_set_sizes = [5,10,25,50,100]
-    # feat_set_sizes = [20]
+    c_values = [.1,1,7,8,9,10,25,50,100,150,200,250,300,350,400,450,500]
+    # c_values = [.1,1,5,10,111,12,50,100]
+    feat_set_sizes = [5,10,20,30,50,75,100,125,150,200,250,300,500,750,1000]
+    # feat_set_sizes = [5,10,25,50,100]
+    # feat_set_sizes = [10]
+
+    fold_accs = {}
+    fold_clfs = {}
+    fold_nf = {}
 
     para_list = [(k, c, num_feats) for k in kernels for c in c_values for num_feats in feat_set_sizes]
     for (k, c, num_feats) in para_list:
@@ -73,48 +70,89 @@ def tr_ind(X,y,type,f_sel,seed):
             # clf = svm.SVC(C=c,gamma="auto",kernel=k,class_weight={0:.3, 1:.7})
             clf = svm.SVC(C=c,gamma="auto",kernel=k,class_weight='balanced')
             # clf = svm.SVC(C=c,gamma="auto",kernel=k)
+            # clf = svm.SVC(C=c,gamma="auto",kernel=k)
             # X_train.to_csv('XT.csv')
             # y_train.to_csv('yt.csv')
             # X_test.to_csv('XTe.csv')
             # y_test.to_csv('yte.csv')
             clf.fit(X_train, y_train.values.ravel())
-            acc.append(clf.score(X_test,y_test))
+            score = clf.score(X_test,y_test)
+            # acc.append(clf.score(X_test,y_test))
             fsc = f1_score(y_test,clf.predict(X_test))
             # print(fsc)
             # acc.append(fsc)
-            # pred = clf.decision_function(X_test)
-            # c1, c2, _ = roc_curve(y_test.values.ravel(), pred.ravel())
-            # area = auc(c1, c2)
-            # acc.append(area)
+            pred = clf.decision_function(X_test)
+            c1, c2, _ = roc_curve(y_test.values.ravel(), pred.ravel())
+            area = auc(c1, c2)
+            acc.append(area)
+            if count not in fold_accs:
+                fold_accs[count] = [fsc]
+                fold_clfs[count] = [clf]
+                fold_nf[count] = [num_feats]
+            else:
+                fold_accs[count] = fold_accs[count] + [fsc]
+                fold_clfs[count] = fold_clfs[count] + [clf]
+                fold_nf[count] = fold_nf[count] + [num_feats]
             # print(area)
             clfs.append(clf)
             print(clf.predict(X_test))
             count = count + 1 # iterates to the next fold
         print('kernel:%s, c-value:%f, num feats:%d' % (k, c, num_feats))
-        print(np.mean(acc))
+        # print(np.mean(acc))
         tot_acc.append(np.mean(acc))
         best_params.append([k, c, num_feats])
         tot_clfs.append(clfs)
         best_fold.append(np.argmax(acc))
     mx = np.max(tot_acc)
-    print(mx)
+    # print(mx)
     ndx = np.argmax(tot_acc)
     print(best_params[ndx])
     final_pset = best_params[ndx]
 
-    ## selecting best classifier from fold of highest average score
+    # # selecting best classifier from fold of highest average score
     # clf = tot_clfs[ndx][best_fold[ndx]]
     # feat_selected = fold_feats[best_fold[ndx]][0:final_pset[2]]
 
-    # refitting with best params
-    X_copy = pd.DataFrame(X, copy=True)
-    y_copy = pd.DataFrame(y, copy=True)
-    feat_selected = select_features(X, y, type, f_sel, final_pset[2])
-    X_copy = X_copy[feat_selected]  # shrinks to have only selected features
-    # clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True,class_weight={0:.3, 1:.7})
-    clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True,class_weight='balanced')    # clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True)
-    clf.fit(X_copy, y_copy.values.ravel())
-    mx = clf.score(X_copy,y_copy.values.ravel())
+    # Li version of selecting best classifier
+    print(fold_accs)
+    print(fold_nf)
+
+    best_accs = []
+    best_clfs = []
+    used_feats = []
+    for i in fold_accs:
+        ndx = np.argmax(fold_accs[i])
+        best_clf = fold_clfs[i][ndx]
+        # print(ndx)
+
+        X_copy = pd.DataFrame(X, copy=True)
+        best_n_feats = fold_nf[i][ndx]
+        feats = fold_feats[i][0:best_n_feats]
+        used_feats.append(feats)
+        X_copy = X_copy[feats]
+
+
+        sc = best_clf.score(X_copy, y.values.ravel())
+        best_accs.append(sc)
+        best_clfs.append(best_clf)
+    print(best_accs)
+    ndx = np.argmax(best_accs)
+    clf = best_clfs[ndx]
+    feat_selected = used_feats[ndx]
+    mx = best_accs[ndx]
+
+
+
+    # # refitting with best params
+    # X_copy = pd.DataFrame(X, copy=True)
+    # y_copy = pd.DataFrame(y, copy=True)
+    # feat_selected = select_features(X, y, type, f_sel, final_pset[2])
+    # X_copy = X_copy[feat_selected]  # shrinks to have only selected features
+    # # clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True,class_weight={0:.3, 1:.7})
+    # clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True,class_weight='balanced')
+    # # clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True)
+    # clf.fit(X_copy, y_copy.values.ravel())
+    # mx = clf.score(X_copy,y_copy.values.ravel())
 
     return (clf,feat_selected,mx)
 

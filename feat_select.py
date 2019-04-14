@@ -4,19 +4,30 @@ import numpy as np
 from scipy.stats import ttest_ind
 # from scipy.stats import chi2_contingency
 from sklearn.feature_selection import chi2
+from sklearn.feature_selection import mutual_info_classif
+from sklearn.feature_selection import VarianceThreshold
 
 def select_features(X,y,modality,method,n_feats):
 
     if method == 'mrmr':
         if modality == 'gene' or modality == 'meth': #for these doing prefiltering with ttest
-            init_feats = reduce(X, y, 2000)
-            X = X.loc[:, init_feats]
+            selector = VarianceThreshold(threshold=.035)
+            selector.fit(X)
+            ndx = selector.get_support(indices=True)
+            feat_keep = []
+            for i in range(X.shape[1]):
+                if i in ndx:
+                    feat_keep.append(list(X)[i])
+            X = X.loc[:, feat_keep]
+
+            # init_feats = reduce(X, y, 2000)
+            # X = X.loc[:, init_feats]
         elif modality == 'CNV':
             init_feats = chi(X, y, 2000)
             X = X.loc[:, init_feats]
 
         # calls helper function to discretize
-        X,y = discretize(X,y,modality,1) #4th param is number std away from mean as discretization threshold
+        X,y = discretize(X,y,modality,2) #4th param is number std away from mean as discretization threshold
 
         # combine response with features to one dataframe [y,X]
         z = pd.concat([y, X], axis=1)
@@ -28,6 +39,20 @@ def select_features(X,y,modality,method,n_feats):
     elif method == 'chi-squared':
         X,y = discretize(X,y,modality,1)
         feat_selected = chi(X, y, n_feats)
+    elif method == 'minfo':
+        selector = VarianceThreshold(threshold=.025)
+        selector.fit(X)
+        ndx = selector.get_support(indices=True)
+        feat_keep = []
+        for i in range(X.shape[1]):
+            if i in ndx:
+                feat_keep.append(list(X)[i])
+        X = X.loc[:,feat_keep]
+
+        if modality != 'CNV':
+            X, y = discretize(X, y, modality, 2)
+
+        feat_selected = minfo(X,y,n_feats)
 
     return (feat_selected)
 
@@ -107,4 +132,16 @@ def chi(X,y,n_feats):
     #     if i < n_feats:
     #         feats.append(list(X)[indicies[i]])
     # return feats
+
+def minfo(X,y,n_feats):
+    score = mutual_info_classif(X,y.values.ravel())
+    feats = []
+    indicies = np.argsort(score)
+    indicies = indicies[::-1]
+    for i in range(len(indicies)):
+        if i < n_feats:
+            feats.append(list(X)[indicies[i]])
+        else:
+            break
+    return feats
 

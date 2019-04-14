@@ -10,6 +10,7 @@ import numpy as np
 import random
 import os
 from sklearn.metrics import f1_score
+from sklearn.ensemble import VotingClassifier
 
 
 # # loads precomputed features and response
@@ -24,6 +25,7 @@ def tr_comb(X,y):
     # parameters to test
     kernels = ['linear', 'rbf', 'sigmoid']
     c_values = [.001,.01,0.1, 1, 10,50,100,250,500,1000,2500,5000,10000]
+    # c_values = [.1,1,10,50]
 
     para_list = [(k, c) for k in kernels for c in c_values]
     tot_acc = []
@@ -64,7 +66,7 @@ def maj_vote(X,y):
         for j in range(X.shape[1]):
             if X.iloc[i,j] < 0:
                 tot += 1
-        if tot >= 2:
+        if tot >= n_modes/2:
             pred.append(0)
         else:
             pred.append(1)
@@ -80,4 +82,29 @@ def maj_vote(X,y):
     # print(score)
 
     return score
+
+def weight_vote(X,y,weights):
+    # this run directly with the test set. no cross validation used
+    n_modes = X.shape[1]
+    pred = []
+    for i in range(X.shape[0]):
+        tot = 0
+        for j in range(X.shape[1]):
+            tot += weights[j]*X.iloc[i,j]
+        if tot < 0:
+            pred.append(0)
+        else:
+            pred.append(1)
+
+    correct = 0
+    for i in range(len(pred)):
+        if pred[i] == y.iloc[i,0]:
+            correct += 1
+
+    print(pred)
+    print(y)
+    score = correct/len(pred)
+    print(score)
+
+
 

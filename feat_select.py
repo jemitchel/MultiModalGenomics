@@ -11,7 +11,7 @@ def select_features(X,y,modality,method,n_feats):
 
     if method == 'mrmr':
         if modality == 'gene' or modality == 'meth': #for these doing prefiltering with ttest
-            selector = VarianceThreshold(threshold=.035)
+            selector = VarianceThreshold(threshold=.025)
             selector.fit(X)
             ndx = selector.get_support(indices=True)
             feat_keep = []
@@ -40,7 +40,7 @@ def select_features(X,y,modality,method,n_feats):
         X,y = discretize(X,y,modality,1)
         feat_selected = chi(X, y, n_feats)
     elif method == 'minfo':
-        selector = VarianceThreshold(threshold=.025)
+        selector = VarianceThreshold(threshold=.01)
         selector.fit(X)
         ndx = selector.get_support(indices=True)
         feat_keep = []
@@ -50,7 +50,7 @@ def select_features(X,y,modality,method,n_feats):
         X = X.loc[:,feat_keep]
 
         if modality != 'CNV':
-            X, y = discretize(X, y, modality, 2)
+            X, y = discretize(X, y, modality, .3)
 
         feat_selected = minfo(X,y,n_feats)
 

@@ -16,7 +16,7 @@ from sklearn.metrics import f1_score
 def tr_ind(X,y,type,f_sel,seed):
     print('this is the seed: %s'%seed)
     # manually doing grid search cross-validation
-    n_folds = 8
+    n_folds = 4
     kf = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
     # kf = KFold(n_splits=n_folds, shuffle=True, random_state=seed)
     fold_feats = []
@@ -42,7 +42,7 @@ def tr_ind(X,y,type,f_sel,seed):
     # c_values = [.1,1,10,25,50,100,150,200,300,400,500]
     c_values = [.1,1,5,10,12,50,100]
     # feat_set_sizes = [5,10,20,30,50,75,100,125,150,200,250,300,500,750,1000]
-    feat_set_sizes = [5,8,10,15,25,35,50,65,80,100]
+    feat_set_sizes = [350]
     # feat_set_sizes = [10]
 
     fold_accs = {}
@@ -161,7 +161,7 @@ def tr_ind(X,y,type,f_sel,seed):
     # refitting with best params from averaging cv results
     X_copy = pd.DataFrame(X, copy=True)
     y_copy = pd.DataFrame(y, copy=True)
-    feat_selected = select_features(X, y, type, f_sel, final_pset[2]) #TRY NOT DOING THIS!!!!!!!
+    # feat_selected = select_features(X, y, type, f_sel, final_pset[2]) #TRY NOT DOING THIS!!!!!!!
     # X_copy = X_copy[feat_selected]  # shrinks to have only selected features
     X_copy = X_copy[feat_selected]  # shrinks to have only selected features
     # clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True,class_weight={0:.3, 1:.7})

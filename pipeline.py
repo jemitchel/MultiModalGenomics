@@ -18,6 +18,7 @@ from sklearn import svm
 # from val_curve import gen_curve
 from val_curve2 import gen_curve
 from cv_2 import tr
+from feat_curve import make_feat_curve
 
 
 def pipeline(rem_zeros):
@@ -42,7 +43,7 @@ def pipeline(rem_zeros):
 
     # splitting labels into train set and validation set
     train_labels, test_labels, train_class, test_class = train_test_split(
-        lbl['case_id'], lbl, test_size=0.1, random_state=198)
+        lbl['case_id'], lbl, test_size=0.1, random_state=42)
 
     # removes features (rows) that have any na in them
     meth = meth.dropna(axis='rows')
@@ -141,9 +142,11 @@ def pipeline(rem_zeros):
     # # gen_curve(meth_train,train_class,meth_test,test_class,'meth',4)
     # # # do cross validation to get best classifiers and feature sets for each modality
 
+    # make_feat_curve(gene_train,train_class,gene_test,test_class,'ttest','gene')
+
     # clf_gene, fea_gene, mx = tr_ind(gene_train,train_class_copy1,'gene','ttest',5)
     # clf_gene, fea_gene, mx = tr(gene_train,train_class_copy1,'gene','ttest')
-    clf_gene, fea_gene = tr(gene_train,train_class_copy1,'gene','ttest')
+    clf_gene, fea_gene = tr(gene_train,train_class_copy1,'gene','ttest',16,'none')
 
     # clf_miRNA, fea_miRNA, _ = tr_ind(miRNA_train,train_class_copy2,'miRNA','ttest',5)
     # clf_meth, fea_meth, _ = tr_ind(meth_train,train_class_copy3,'meth','ttest',5)
@@ -161,14 +164,18 @@ def pipeline(rem_zeros):
     #stuff for test
     gene_train_copy2 = gene_train_copy2[fea_gene]
     gene_test = gene_test[fea_gene]
-    print(clf_gene.decision_function(gene_test))
+    # print(clf_gene.decision_function(gene_test))
+    # print(test_class)
     print(clf_gene.decision_function(gene_train_copy2))
+    print(train_class_copy2)
     # print(clf_gene.predict(gene_test))
     print('test accuracy:',clf_gene.score(gene_test,test_class))
     print('train accuracy:',clf_gene.score(gene_train_copy2,train_class_copy2))
     # print('train accuracy:',mx)
     c1,c2,_ = roc_curve(test_class.values.ravel(), clf_gene.decision_function(gene_test).ravel())
     print('auc:',auc(c1, c2))
+    c1, c2, _ = roc_curve(train_class.values.ravel(), clf_gene.decision_function(gene_train_copy2).ravel())
+    print('auc:', auc(c1, c2))
     #
     # # os.chdir("D:\\4813")
     # # gene_train_copy3.to_csv('feature_vis4.csv')

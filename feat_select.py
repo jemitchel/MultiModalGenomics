@@ -11,23 +11,23 @@ def select_features(X,y,modality,method,n_feats):
 
     if method == 'mrmr':
         if modality == 'gene' or modality == 'meth': #for these doing prefiltering with ttest
-            selector = VarianceThreshold(threshold=.025)
-            selector.fit(X)
-            ndx = selector.get_support(indices=True)
-            feat_keep = []
-            for i in range(X.shape[1]):
-                if i in ndx:
-                    feat_keep.append(list(X)[i])
-            X = X.loc[:, feat_keep]
+            # selector = VarianceThreshold(threshold=.025)
+            # selector.fit(X)
+            # ndx = selector.get_support(indices=True)
+            # feat_keep = []
+            # for i in range(X.shape[1]):
+            #     if i in ndx:
+            #         feat_keep.append(list(X)[i])
+            # X = X.loc[:, feat_keep]
 
-            # init_feats = reduce(X, y, 2000)
-            # X = X.loc[:, init_feats]
+            init_feats = reduce(X, y, 2000)
+            X = X.loc[:, init_feats]
         elif modality == 'CNV':
             init_feats = chi(X, y, 2000)
             X = X.loc[:, init_feats]
 
         # calls helper function to discretize
-        X,y = discretize(X,y,modality,2) #4th param is number std away from mean as discretization threshold
+        X,y = discretize(X,y,modality,.5) #4th param is number std away from mean as discretization threshold
 
         # combine response with features to one dataframe [y,X]
         z = pd.concat([y, X], axis=1)
@@ -40,7 +40,7 @@ def select_features(X,y,modality,method,n_feats):
         X,y = discretize(X,y,modality,1)
         feat_selected = chi(X, y, n_feats)
     elif method == 'minfo':
-        selector = VarianceThreshold(threshold=.01)
+        selector = VarianceThreshold(threshold=.03)
         selector.fit(X)
         ndx = selector.get_support(indices=True)
         feat_keep = []
@@ -50,7 +50,7 @@ def select_features(X,y,modality,method,n_feats):
         X = X.loc[:,feat_keep]
 
         if modality != 'CNV':
-            X, y = discretize(X, y, modality, .3)
+            X, y = discretize(X, y, modality, .5)
 
         feat_selected = minfo(X,y,n_feats)
 

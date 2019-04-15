@@ -204,19 +204,19 @@ def pipeline(rem_zeros):
     # pred_CNV = clf_CNV.decision_function(CNV_train_copy2)
 
     # produces training data from part of test data
-    miRNA_val1 = miRNA_test.iloc[0:20,:][fea_miRNA]
-    gene_val1 = gene_test.iloc[0:20,:][fea_gene]
-    meth_val1 = meth_test.iloc[0:20,:][fea_meth]
-    CNV_val1 = CNV_test.iloc[0:20,:][fea_CNV]
+    miRNA_val1 = miRNA_test.iloc[0:30,:][fea_miRNA]
+    gene_val1 = gene_test.iloc[0:30,:][fea_gene]
+    meth_val1 = meth_test.iloc[0:30,:][fea_meth]
+    CNV_val1 = CNV_test.iloc[0:30,:][fea_CNV]
 
-    val1_class = test_class.iloc[0:20,:]
+    val1_class = test_class.iloc[0:30,:]
 
-    miRNA_val2 = miRNA_test.iloc[20:, :][fea_miRNA]
-    gene_val2 = gene_test.iloc[20:, :][fea_gene]
-    meth_val2 = meth_test.iloc[20:, :][fea_meth]
-    CNV_val2 = CNV_test.iloc[20:, :][fea_CNV]
+    miRNA_val2 = miRNA_test.iloc[30:, :][fea_miRNA]
+    gene_val2 = gene_test.iloc[30:, :][fea_gene]
+    meth_val2 = meth_test.iloc[30:, :][fea_meth]
+    CNV_val2 = CNV_test.iloc[30:, :][fea_CNV]
 
-    val2_class = test_class.iloc[20:,:]
+    val2_class = test_class.iloc[30:,:]
 
 
     pred_miRNA = clf_miRNA.decision_function(miRNA_val1)
@@ -242,7 +242,8 @@ def pipeline(rem_zeros):
     new_feats_val = {'sample': miRNA_val1.index.values, 'miRNA': miRNA_val1, 'gene': gene_val1, 'meth': meth_val1,
                  'CNV': CNV_val1}
 
-    clf.score(new_feats_val,val2_class)
+    res = clf.score(new_feats_val,val2_class)
+    print(res)
 
     # new_feats = {'sample':miRNA_train.index.values,'miRNA':pred_miRNA, 'gene':pred_gene, 'meth':pred_meth, 'CNV':pred_CNV}
     # # new_feats = {'sample':miRNA_train.index.values,'gene':pred_gene, 'CNV':pred_CNV, 'meth':pred_meth}

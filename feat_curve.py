@@ -5,23 +5,28 @@ from sklearn.metrics import roc_curve, auc
 import matplotlib.pyplot as plt
 
 def make_feat_curve(X,y,X_test,y_test,f_sel,modality):
-    max_n_feats = 120
+    max_n_feats = 20
     feat_iters = []
     X2 = pd.DataFrame(X, copy=True)  # copies the original feature dataframe
     y2 = pd.DataFrame(y, copy=True)  # copies the original feature dataframe
-    feat_selected = select_features(X, y, type, f_sel, max_n_feats)
+    feat_selected = select_features(X, y, modality, f_sel, max_n_feats)
 
     test_acc = []
     train_acc = []
     test_auc = []
     train_auc = []
     num_feats = []
+
+    res = []
+
     for i in range(2,max_n_feats,2):
         print(i)
         num_feats.append(i)
         X3 = pd.DataFrame(X2, copy=True)  # copies the original feature dataframe
         y3 = pd.DataFrame(y2, copy=True)  # copies the original feature dataframe
         clf,fea_ = tr(X3,y3,modality,f_sel,'none',feat_selected[0:i])
+
+        clf.best_score_
 
         # stuff for test
         X4 = X2[fea_]

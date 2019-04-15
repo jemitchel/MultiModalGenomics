@@ -22,35 +22,42 @@ def select_features(X,y,modality,method,n_feats):
 
             init_feats = reduce(X, y, 2000)
             X = X.loc[:, init_feats]
+            print('check1')
         elif modality == 'CNV':
             init_feats = chi(X, y, 2000)
             X = X.loc[:, init_feats]
 
         # calls helper function to discretize
         X,y = discretize(X,y,modality,.5) #4th param is number std away from mean as discretization threshold
-
+        print('check 2')
         # combine response with features to one dataframe [y,X]
         z = pd.concat([y, X], axis=1)
 
         # calling mRMR function
         feat_selected = pymrmr.mRMR(z,'MIQ',n_feats)
+        print('check 3')
     elif method == 'ttest':
         feat_selected = reduce(X, y, n_feats)
     elif method == 'chi-squared':
-        X,y = discretize(X,y,modality,1)
+        X,y = discretize(X,y,modality,.3)
         feat_selected = chi(X, y, n_feats)
     elif method == 'minfo':
-        selector = VarianceThreshold(threshold=.03)
-        selector.fit(X)
-        ndx = selector.get_support(indices=True)
-        feat_keep = []
-        for i in range(X.shape[1]):
-            if i in ndx:
-                feat_keep.append(list(X)[i])
-        X = X.loc[:,feat_keep]
+        # selector = VarianceThreshold(threshold=.03)
+        # selector.fit(X)
+        # ndx = selector.get_support(indices=True)
+        # feat_keep = []
+        # for i in range(X.shape[1]):
+        #     if i in ndx:
+        #         feat_keep.append(list(X)[i])
+        # X = X.loc[:,feat_keep]
 
-        if modality != 'CNV':
+        if modality == 'miRNA':
+            X, y = discretize(X, y, modality, .3)
+
+        if modality == 'CNV' or modality == 'gene' or modality == 'meth':
             X, y = discretize(X, y, modality, .5)
+            init_feats = chi(X, y, 2000)
+            X = X.loc[:, init_feats]
 
         feat_selected = minfo(X,y,n_feats)
 
@@ -77,9 +84,12 @@ def discretize(X,y,modality,n): #features need to be -2,0,2 and response needs t
         std = X.std(axis=0) # for using non trimmed std
         av = X.mean(axis=0) # for using non trimmed mean
 
-        X[X < av-(n*std)] = -2
-        X[X > av+(n*std)] = 2
-        X[abs(X) != 2] = 0
+        # X[X < av-(n*std)] = -2
+        # X[X > av+(n*std)] = 2
+        # X[abs(X) != 2] = 0
+        X[X < av - (n * std)] = 0
+        X[X > av + (n * std)] = 2
+        X[abs(X) != 2] = 4
         X = X.astype('int64') #makes the numbers integers, not floats
 
     # changes discretization for class labels

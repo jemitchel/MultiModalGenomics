@@ -22,21 +22,22 @@ def tr(X,y,type,f_sel,n_feats,feat_selected):
         X2 = X2[feat_selected]
 
     # start of classification
-    parameters = {'kernel': ('linear','poly','rbf','sigmoid'), 'C': [0.1,.5,1,1.5,2,2.5,3,4,5,6,7,8,9,10,11,12]}
+    parameters = {'kernel': ('linear','poly','rbf','sigmoid'), 'C': [.001,.005,0.1,.5,1,1.5,2,2.5,3,4,5,6,7,8,9,10,11,12,15,20,25]}
     svc = svm.SVC(gamma="auto",class_weight='balanced')
     # svc = svm.SVC(gamma="auto")
-    # clf = GridSearchCV(svc, parameters, cv=4,scoring=fsc)
-    clf = GridSearchCV(svc, parameters, cv=4,scoring=c_kap)
-    # clf = GridSearchCV(svc, parameters, cv=4)
+    # clf = GridSearchCV(svc, parameters, cv=4,scoring=fsc,iid=False)
+    clf = GridSearchCV(svc, parameters, cv=4,scoring=c_kap,iid=False)
+    # clf = GridSearchCV(svc, parameters, cv=4,iid=False)
     clf.fit(X2, y2.values.ravel()) #can also try X here if alter it first
 
     # for param, score in zip(clf.cv_results_['params'], clf.cv_results_['mean_test_score']):
     #     print(param, score)
 
-    print(clf.best_params_)
+    # print(clf.best_params_)
 
-    clf = svm.SVC(gamma='auto',class_weight='balanced',C=clf.best_params_['C'],kernel=clf.best_params_['kernel'])
-    # clf = svm.SVC(gamma='auto',C=clf.best_params_['C'],kernel=clf.best_params_['kernel'])
-    clf.fit(X2, y2.values.ravel())
+    # clf = svm.SVC(gamma='auto',class_weight='balanced',C=clf.best_params_['C'],kernel=clf.best_params_['kernel'])
+    # # clf = svm.SVC(gamma='auto',C=clf.best_params_['C'],kernel=clf.best_params_['kernel'])
+    # clf.fit(X2, y2.values.ravel())
 
     return clf, feat_selected
+

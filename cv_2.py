@@ -5,6 +5,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import make_scorer
 from sklearn.metrics import f1_score
 from sklearn.metrics import cohen_kappa_score
+import random
 
 def tr(X,y,type,f_sel,n_feats,feat_selected):
     fsc = make_scorer(f1_score)
@@ -22,7 +23,8 @@ def tr(X,y,type,f_sel,n_feats,feat_selected):
         X2 = X2[feat_selected]
 
     # start of classification
-    parameters = {'kernel': ('linear','poly','rbf','sigmoid'), 'C': [.001,.005,0.1,.5,1,1.5,2,2.5,3,4,5,6,7,8,9,10,11,12,15,20,25]}
+    parameters = {'kernel': ('linear','poly','rbf','sigmoid'), 'C': [.001,.005,0.1,.5,1,1.5,2,2.5,3,4,5,10,15,20,25,30,50,75,100]}
+    # parameters = {'kernel': ('linear','poly','rbf','sigmoid'), 'C': [0.1,.5,1,1.5,2,2.5,3,4,5,6,7,8,9,10,11,12]}
     svc = svm.SVC(gamma="auto",class_weight='balanced')
     # svc = svm.SVC(gamma="auto")
     # clf = GridSearchCV(svc, parameters, cv=4,scoring=fsc,iid=False)

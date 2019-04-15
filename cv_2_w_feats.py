@@ -14,6 +14,7 @@ def do_cv(X, y, X_test, y_test, f_sel, modality,n_feats):
     y2 = pd.DataFrame(y, copy=True)  # copies the original feature dataframe
     feat_selected = select_features(X, y, modality, f_sel, max_n_feats)
 
+
     test_acc = []
     train_acc = []
     test_auc = []
@@ -26,7 +27,7 @@ def do_cv(X, y, X_test, y_test, f_sel, modality,n_feats):
     best_params = []
     hmap_data = np.array(['kernel','C','num_feats','score'])
 
-    for i in range(2, max_n_feats, 2):
+    for i in range(5, max_n_feats, 5):
         print(i)
         num_feats.append(i)
         X3 = pd.DataFrame(X2, copy=True)  # copies the original feature dataframe
@@ -67,23 +68,23 @@ def do_cv(X, y, X_test, y_test, f_sel, modality,n_feats):
     print('max',res[ndx])
 
 
-    # fig = plt.figure()
-    # ax1 = fig.add_axes([0.1, 0.5, 0.8, .2], ylim=(0, 1))
-    # ax2 = fig.add_axes([0.1, 0.1, 0.8, .2], ylim=(0, 1))
-    #
-    # ax1.plot(num_feats, train_acc, 'r')
-    # ax1.plot(num_feats, test_acc, 'b')
-    # ax1.set_title('Train and Test Accuracy', fontsize=30)
-    # ax1.set_xlabel('Number of Features', fontsize=20)
-    # ax1.set_ylabel('Accuracy', fontsize=20)
-    #
-    # ax2.plot(num_feats, train_auc, 'r')
-    # ax2.plot(num_feats, test_auc, 'b')
-    # ax2.set_title('Train and Test AUC', fontsize=30)
-    # ax2.set_xlabel('Number of Features', fontsize=20)
-    # ax2.set_ylabel('AUC', fontsize=20)
-    #
-    # plt.show()
+    fig = plt.figure()
+    ax1 = fig.add_axes([0.1, 0.5, 0.8, .2], ylim=(0, 1))
+    ax2 = fig.add_axes([0.1, 0.1, 0.8, .2], ylim=(0, 1))
+
+    ax1.plot(num_feats, train_acc, 'r')
+    ax1.plot(num_feats, test_acc, 'b')
+    ax1.set_title('Train and Test Accuracy', fontsize=30)
+    ax1.set_xlabel('Number of Features', fontsize=20)
+    ax1.set_ylabel('Accuracy', fontsize=20)
+
+    ax2.plot(num_feats, train_auc, 'r')
+    ax2.plot(num_feats, test_auc, 'b')
+    ax2.set_title('Train and Test AUC', fontsize=30)
+    ax2.set_xlabel('Number of Features', fontsize=20)
+    ax2.set_ylabel('AUC', fontsize=20)
+
+    plt.show()
 
     return best_clfs[ndx],best_feats[ndx],hmap_data
 

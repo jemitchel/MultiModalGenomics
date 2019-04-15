@@ -10,6 +10,8 @@ import numpy as np
 import random
 from sklearn.metrics import roc_curve, auc
 from sklearn.metrics import f1_score
+from sklearn.metrics import cohen_kappa_score
+
 
 
 # outputs a classifier and optimal features
@@ -25,7 +27,7 @@ def tr_ind(X,y,type,f_sel,seed):
         X_train, y_train = X.loc[tr_ndx, :], y.loc[tr_ndx, :]
 
         # feature selection for train data
-        feat_selected = select_features(X_train, y_train, type, f_sel, 100)
+        feat_selected = select_features(X_train, y_train, type, f_sel, 200)
         print(feat_selected)
         fold_feats.append(feat_selected)
 
@@ -41,8 +43,8 @@ def tr_ind(X,y,type,f_sel,seed):
     # c_values = [0.1]
     # c_values = [.1,1,10,25,50,100,150,200,300,400,500]
     c_values = [.1,1,5,10,12,50,100]
-    # feat_set_sizes = [5,10,20,30,50,75,100,125,150,200,250,300,500,750,1000]
-    feat_set_sizes = [350]
+    feat_set_sizes = [5,10,20,30,50,75,100,125,150,200]
+    # feat_set_sizes = [350]
     # feat_set_sizes = [10]
 
     fold_accs = {}
@@ -80,7 +82,9 @@ def tr_ind(X,y,type,f_sel,seed):
             score = clf.score(X_test,y_test)
             # acc.append(clf.score(X_test,y_test))
             fsc = f1_score(y_test,clf.predict(X_test))
+            ckap = cohen_kappa_score(y_test,clf.predict(X_test))
             # print(fsc)
+            # acc.append(fsc)
             acc.append(fsc)
             pred = clf.decision_function(X_test)
             c1, c2, _ = roc_curve(y_test.values.ravel(), pred.ravel())

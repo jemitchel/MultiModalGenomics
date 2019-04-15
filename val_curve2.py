@@ -13,10 +13,10 @@ def gen_curve(frame,lbl,modality,n_times):
     pt_x = []
     pt_y = []
     all_auc = []
-    seeds = [4224,3556,1155]
+    # seeds = [4224,3556,1155]
     for i in range(n_times):
-        # seed = random.randint(1, 10000)
-        seed = seeds[i]
+        seed = random.randint(1, 10000)
+        # seed = seeds[i]
         train_labels, test_labels, train_class, test_class = train_test_split(
             lbl['case_id'], lbl, test_size=0.10, random_state=seed)
 
@@ -48,15 +48,20 @@ def gen_curve(frame,lbl,modality,n_times):
         y_train_copy = pd.DataFrame(y_train, copy=True)
 
         if modality == 'gene':
-            print(X_test.shape)
-            print(y_test.shape)
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',80)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',120)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',80)
+
         elif modality == 'CNV':
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV',60)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV',60)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV',120)
+
         elif modality == 'meth':
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',80)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',80)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'meth',120)
         else:
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',60)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',60)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',120)
+
 
         X_test = X_test[feats]
         X_train = X_train[feats]
@@ -75,5 +80,5 @@ def gen_curve(frame,lbl,modality,n_times):
     plt.plot(x,x)
     plt.xlabel('Training Accuracy')
     plt.ylabel('Test Set Accuracy')
-    plt.title('mRNA Validation Plot')
+    plt.title('Methylation Validation Plot')
     plt.show()

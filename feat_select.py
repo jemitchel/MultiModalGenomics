@@ -52,11 +52,11 @@ def select_features(X,y,modality,method,n_feats):
         # X = X.loc[:,feat_keep]
 
         if modality == 'miRNA':
-            X, y = discretize(X, y, modality, .3)
+            X, y = discretize(X, y, modality, 2)
 
         if modality == 'CNV' or modality == 'gene' or modality == 'meth':
-            X, y = discretize(X, y, modality, .5)
-            init_feats = chi(X, y, 2000)
+            X, y = discretize(X, y, modality, 1)
+            init_feats = chi(X, y, 5000)
             X = X.loc[:, init_feats]
 
         feat_selected = minfo(X,y,n_feats)
@@ -144,7 +144,8 @@ def chi(X,y,n_feats):
     # return feats
 
 def minfo(X,y,n_feats):
-    score = mutual_info_classif(X,y.values.ravel())
+    # score = mutual_info_classif(X,y.values.ravel(),random_state=42)
+    score = mutual_info_classif(X,y.values.ravel(),discrete_features=True)
     feats = []
     indicies = np.argsort(score)
     indicies = indicies[::-1]

@@ -131,7 +131,7 @@ def pipeline(rem_zeros):
                                                                                  pd.DataFrame(train_class, copy=True)
 
 
-    # gen_curve(gene,lbl,'gene',3)
+    gen_curve(meth,lbl,'CNV',3)
     # miRNA_train_copy2 = pd.DataFrame(miRNA_train, copy=True)
     # meth_train_copy2 = pd.DataFrame(meth_train, copy=True)
     # CNV_train_copy2 = pd.DataFrame(CNV_train, copy=True)
@@ -144,10 +144,10 @@ def pipeline(rem_zeros):
     # # # do cross validation to get best classifiers and feature sets for each modality
 
     # make_feat_curve(gene_train,train_class,gene_test,test_class,'mrmr','gene')
-    # clf, feats,_ = do_cv(gene_train,train_class,gene_test,test_class,'ttest','gene')
-    # clf, feats,_ = do_cv(miRNA_train,train_class,miRNA_test,test_class,'minfo','miRNA')
-    clf, feats,_ = do_cv(meth_train,train_class,meth_test,test_class,'minfo','meth')
-    # clf, feats,_ = do_cv(CNV_train,train_class,CNV_test,test_class,'minfo','CNV')
+    # clf, feats,_ = do_cv(gene_train,train_class,gene_test,test_class,'ttest','gene',80)
+    # clf, feats,_ = do_cv(miRNA_train,train_class,miRNA_test,test_class,'minfo','miRNA',60)
+    # clf, feats,_ = do_cv(meth_train,train_class,meth_test,test_class,'minfo','meth',80)
+    # clf, feats,_ = do_cv(CNV_train,train_class,CNV_test,test_class,'minfo','CNV',60)
 
 
     # clf_gene, fea_gene, mx = tr_ind(gene_train,train_class_copy1,'gene','ttest',5)

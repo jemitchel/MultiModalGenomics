@@ -68,23 +68,23 @@ def do_cv(X, y, X_test, y_test, f_sel, modality,n_feats):
     print('max',res[ndx])
 
 
-    fig = plt.figure()
-    ax1 = fig.add_axes([0.1, 0.5, 0.8, .2], ylim=(0, 1))
-    ax2 = fig.add_axes([0.1, 0.1, 0.8, .2], ylim=(0, 1))
-
-    ax1.plot(num_feats, train_acc, 'r')
-    ax1.plot(num_feats, test_acc, 'b')
-    ax1.set_title('Train and Test Accuracy', fontsize=30)
-    ax1.set_xlabel('Number of Features', fontsize=20)
-    ax1.set_ylabel('Accuracy', fontsize=20)
-
-    ax2.plot(num_feats, train_auc, 'r')
-    ax2.plot(num_feats, test_auc, 'b')
-    ax2.set_title('Train and Test AUC', fontsize=30)
-    ax2.set_xlabel('Number of Features', fontsize=20)
-    ax2.set_ylabel('AUC', fontsize=20)
-
-    plt.show()
+    # fig = plt.figure()
+    # ax1 = fig.add_axes([0.1, 0.5, 0.8, .2], ylim=(0, 1))
+    # ax2 = fig.add_axes([0.1, 0.1, 0.8, .2], ylim=(0, 1))
+    #
+    # ax1.plot(num_feats, train_acc, 'r')
+    # ax1.plot(num_feats, test_acc, 'b')
+    # ax1.set_title('Train and Test Accuracy', fontsize=30)
+    # ax1.set_xlabel('Number of Features', fontsize=20)
+    # ax1.set_ylabel('Accuracy', fontsize=20)
+    #
+    # ax2.plot(num_feats, train_auc, 'r')
+    # ax2.plot(num_feats, test_auc, 'b')
+    # ax2.set_title('Train and Test AUC', fontsize=30)
+    # ax2.set_xlabel('Number of Features', fontsize=20)
+    # ax2.set_ylabel('AUC', fontsize=20)
+    #
+    # plt.show()
 
     return best_clfs[ndx],best_feats[ndx],hmap_data
 

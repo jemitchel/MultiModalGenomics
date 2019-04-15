@@ -21,7 +21,7 @@ from sklearn.ensemble import VotingClassifier
 # outputs a classifier and optimal features
 def tr_comb(X,y):
 
-    kf = StratifiedKFold(n_splits=4, shuffle=True, random_state=12)
+    kf = StratifiedKFold(n_splits=3, shuffle=True, random_state=12)
     # parameters to test
     kernels = ['linear', 'rbf', 'sigmoid']
     c_values = [.001,.01,0.1, 1, 10,50,100,250,500,1000,2500,5000,10000]
@@ -39,7 +39,7 @@ def tr_comb(X,y):
             y_train, y_test = y.loc[tr_ndx, :], y.loc[te_ndx, :]
 
             # start of classification
-            clf = svm.SVC(C=c, gamma="auto", kernel=k)
+            clf = svm.SVC(C=c, gamma="auto", kernel=k,class_weight='balanced')
             clf.fit(X_train, y_train.values.ravel())
             acc.append(clf.score(X_test,y_test))
             fsc = f1_score(y_test, clf.predict(X_test))
@@ -52,7 +52,7 @@ def tr_comb(X,y):
     ndx = np.argmax(tot_acc)
     final_pset = best_params[ndx]
     # print(final_pset)
-    clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True)
+    clf = svm.SVC(C=final_pset[1], gamma="auto", kernel=final_pset[0], probability=True,class_weight='balanced')
     clf.fit(X, y.values.ravel())
 
     return (clf)

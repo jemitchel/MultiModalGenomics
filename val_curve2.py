@@ -13,12 +13,12 @@ def gen_curve(frame,lbl,modality,n_times):
     pt_x = []
     pt_y = []
     all_auc = []
-    # seeds = [4224,3556,1155]
+    seeds = [2301,3990,8490,8408,9084,2736,111,9483,345,1220]
     for i in range(n_times):
-        seed = random.randint(1, 10000)
-        # seed = seeds[i]
+        # seed = random.randint(1, 10000)
+        seed = seeds[i]
         train_labels, test_labels, train_class, test_class = train_test_split(
-            lbl['case_id'], lbl, test_size=0.10, random_state=seed)
+            lbl['case_id'], lbl, test_size=0.15, random_state=seed)
 
         X_train = frame[train_labels].T
         X_test = frame[test_labels].T
@@ -26,12 +26,12 @@ def gen_curve(frame,lbl,modality,n_times):
         y_train = train_class.set_index('case_id')  # changes first column to be indices
         y_test = test_class.set_index('case_id')  # changes first column to be indices
 
-        # y_train[y_train == 1] = 2
-        # y_train[y_train == 0] = 1
-        # y_train[y_train == 2] = 0
-        # y_test[y_test == 1] = 2
-        # y_test[y_test == 0] = 1
-        # y_test[y_test == 2] = 0
+        y_train[y_train == 1] = 2
+        y_train[y_train == 0] = 1
+        y_train[y_train == 2] = 0
+        y_test[y_test == 1] = 2
+        y_test[y_test == 0] = 1
+        y_test[y_test == 2] = 0
 
         if modality == 'gene' or modality == 'miRNA':
             # normalizing gene expression and miRNA datasets
@@ -48,18 +48,19 @@ def gen_curve(frame,lbl,modality,n_times):
         y_train_copy = pd.DataFrame(y_train, copy=True)
 
         if modality == 'gene':
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',120)
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',80)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',36)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',120)
 
         elif modality == 'CNV':
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV',60)
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV',120)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'mrmr', 'CNV',20)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV',120)
 
         elif modality == 'meth':
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',80)
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'meth',120)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',60)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',120)
+
         else:
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',60)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',30)
             clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',120)
 
 
@@ -80,5 +81,16 @@ def gen_curve(frame,lbl,modality,n_times):
     plt.plot(x,x)
     plt.xlabel('Training Accuracy')
     plt.ylabel('Test Set Accuracy')
-    plt.title('Methylation Validation Plot')
+    name = ''
+    if modality == 'gene':
+        name = 'Gene Expression'
+    elif modality == 'CNV':
+        name = 'CNV'
+    elif modality == 'meth':
+        name = 'Methylation'
+    elif modality == 'miRNA':
+        name = 'miRNA'
+    plt.title(name + ' Validation Plot')
     plt.show()
+
+

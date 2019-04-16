@@ -5,7 +5,8 @@ from train_ind import tr_ind
 from sklearn import preprocessing
 from feat_select import select_features
 from train_comb import tr_comb
-# from train_comb import maj_vote
+from train_comb import tr_comb_grid
+from train_comb import maj_vote
 # from train_comb import weight_vote
 from sklearn.metrics import roc_curve, auc
 from imblearn.over_sampling import SMOTE
@@ -24,7 +25,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from joblib import dump, load
 
 
-def pipeline(rem_zeros):
+def pipeline(rem_zeros,seed):
 
     # loads all data
     os.chdir("C:\\Users\\jonat\\Documents\\Spring 2019 Classes\\4813\\BHI_data")
@@ -38,6 +39,8 @@ def pipeline(rem_zeros):
     meth = pd.read_csv('meth.csv',index_col=0)
     CNV = pd.read_csv('CNV.csv',index_col=0)
 
+    os.chdir("C:\\Users\\jonat\\Documents\\Spring 2019 Classes\\4813\\clfs")
+
 
     # optionally removes rows (features) that are all 0 across patients
     if rem_zeros == True:
@@ -46,7 +49,7 @@ def pipeline(rem_zeros):
 
     # splitting labels into train set and validation set
     train_labels, test_labels, train_class, test_class = train_test_split(
-        lbl['case_id'], lbl, test_size=0.15, random_state=42)
+        lbl['case_id'], lbl, test_size=0.15, random_state=seed)
 
     # removes features (rows) that have any na in them
     meth = meth.dropna(axis='rows')
@@ -136,7 +139,7 @@ def pipeline(rem_zeros):
 
 
 
-    # gen_curve(meth,lbl,'miRNA',3)
+    # gen_curve(miRNA,lbl,'miRNA',10)
     miRNA_train_copy2 = pd.DataFrame(miRNA_train, copy=True)
     meth_train_copy2 = pd.DataFrame(meth_train, copy=True)
     CNV_train_copy2 = pd.DataFrame(CNV_train, copy=True)
@@ -151,14 +154,10 @@ def pipeline(rem_zeros):
     #
     # # make_feat_curve(gene_train,train_class,gene_test,test_class,'mrmr','gene')
 
-    # clf_gene, fea_gene,_ = do_cv(gene_train,train_class_copy1,gene_test,test_class,'ttest','gene',200)
-    # # clf_gene, fea_gene,_ = do_cv(gene_train,train_class_copy1,gene_test,test_class,'ttest','gene',10)
-    # clf_miRNA, fea_miRNA,_ = do_cv(miRNA_train,train_class_copy2,miRNA_test,test_class,'minfo','miRNA',120)
-    # # clf_miRNA, fea_miRNA,_ = do_cv(miRNA_train,train_class_copy2,miRNA_test,test_class,'minfo','miRNA',10)
-    # clf_meth, fea_meth,_ = do_cv(meth_train,train_class_copy3,meth_test,test_class,'minfo','meth',120)
-    # # clf_meth, fea_meth,_ = do_cv(meth_train,train_class_copy3,meth_test,test_class,'minfo','meth',10)
-    # clf_CNV, fea_CNV,_ = do_cv(CNV_train,train_class_copy4,CNV_test,test_class,'minfo','CNV',120)
-    # # clf_CNV, fea_CNV,_ = do_cv(CNV_train,train_class_copy4,CNV_test,test_class,'minfo','CNV',10)
+    clf_gene, fea_gene,_ = do_cv(gene_train,train_class_copy1,gene_test,test_class,'ttest','gene',36,4)
+    clf_miRNA, fea_miRNA,_ = do_cv(miRNA_train,train_class_copy2,miRNA_test,test_class,'minfo','miRNA',120,10)
+    clf_meth, fea_meth,_ = do_cv(meth_train,train_class_copy3,meth_test,test_class,'minfo','meth',60,4)
+    clf_CNV, fea_CNV,_ = do_cv(CNV_train,train_class_copy4,CNV_test,test_class,'mrmr','CNV',24,4)
 
     # dump(clf_gene, 'clf_gene.joblib')
     # dump(fea_gene, 'fea_gene.joblib')
@@ -168,171 +167,185 @@ def pipeline(rem_zeros):
     # dump(fea_CNV, 'fea_CNV.joblib')
     # dump(clf_miRNA, 'clf_miRNA.joblib')
     # dump(fea_miRNA, 'fea_miRNA.joblib')
-
-    clf_gene = load('clf_gene.joblib')
-    fea_gene = load('fea_gene.joblib')
-    clf_meth = load('clf_meth.joblib')
-    fea_meth = load('fea_meth.joblib')
-    clf_CNV = load('clf_CNV.joblib')
-    fea_CNV = load('fea_CNV.joblib')
-    clf_miRNA = load('clf_miRNA.joblib')
-    fea_miRNA = load('fea_miRNA.joblib')
-
-
-    # clf_gene, fea_gene, mx = tr_ind(gene_train,train_class_copy1,'gene','ttest',5)
-    # clf_gene, fea_gene, mx = tr(gene_train,train_class_copy1,'gene','ttest')
-    # clf_gene, fea_gene = tr(gene_train,train_class_copy1,'gene','ttest',20,'none')
-
-    # clf_miRNA, fea_miRNA, _ = tr_ind(miRNA_train,train_class_copy2,'miRNA','ttest',5)
-    # clf_meth, fea_meth, _ = tr_ind(meth_train,train_class_copy3,'meth','ttest',5)
-    # clf_CNV, fea_CNV, _ = tr_ind(CNV_train,train_class_copy4,'CNV','chi-squared',5)
-    # feat = select_features(gene_train, train_class, 'gene', 'ttest', 20)
-    # print(feat)
-    # # print(feat)
-    # # print(feat)
-    # # feats = select_features(CNV_train, train_class, 'CNV', 'chi-squared', 10)
-    # # print(feats)
-    # # gene_train_copy3 = gene_train_copy3[feat_selected]
-    # # clf = svm.SVC(C=100, gamma="auto", kernel='rbf')
-    # # clf.fit(gene_train_copy2, train_class_copy5.values.ravel())
-
-    # #stuff for test
-    # gene_train_copy2 = gene_train_copy2[fea_gene]
-    # gene_test = gene_test[fea_gene]
-    # print(clf_gene.decision_function(gene_test))
-    # print(test_class)
-    # # print(clf_gene.decision_function(gene_train_copy2))
-    # # print(train_class_copy2)
-    # # print(clf_gene.predict(gene_test))
-    # print('test accuracy:',clf_gene.score(gene_test,test_class))
-    # print('train accuracy:',clf_gene.score(gene_train_copy2,train_class_copy2))
-    # # print('train accuracy:',mx)
-    # c1,c2,_ = roc_curve(test_class.values.ravel(), clf_gene.decision_function(gene_test).ravel())
-    # print('auc:',auc(c1, c2))
-    # c1, c2, _ = roc_curve(train_class.values.ravel(), clf_gene.decision_function(gene_train_copy2).ravel())
-    # print('auc:', auc(c1, c2))
-    #
-    # # os.chdir("D:\\4813")
-    # # gene_train_copy3.to_csv('feature_vis4.csv')
-    # # train_class.to_csv('group4.csv')
     # #
-    # select features
-    miRNA_train_copy2 = miRNA_train_copy2[fea_miRNA]
-    gene_train_copy2 = gene_train_copy2[fea_gene]
-    meth_train_copy2 = meth_train_copy2[fea_meth]
-    CNV_train_copy2 = CNV_train_copy2[fea_CNV]
+    # clf_gene = load('clf_gene.joblib')
+    # fea_gene = load('fea_gene.joblib')
+    # clf_meth = load('clf_meth.joblib')
+    # fea_meth = load('fea_meth.joblib')
+    # clf_CNV = load('clf_CNV.joblib')
+    # fea_CNV = load('fea_CNV.joblib')
+    # clf_miRNA = load('clf_miRNA.joblib')
+    # fea_miRNA = load('fea_miRNA.joblib')
+    # cool = pd.DataFrame(fea_gene)
+    # cool.to_csv('cool.csv')
+    # #
+    # pred_miRNA = clf_miRNA.predict_proba(miRNA_train_copy2[fea_miRNA])[:,0]
+    # pred_gene = clf_gene.predict_proba(gene_train_copy2[fea_gene])[:,0]
+    # pred_CNV = clf_CNV.predict_proba(CNV_train_copy2[fea_CNV])[:,0]
+    # pred_meth = clf_meth.predict_proba(meth_train_copy2[fea_meth])[:,0]
+    #
+    #
+    # # clf_gene, fea_gene, mx = tr_ind(gene_train,train_class_copy1,'gene','ttest',5)
+    # # clf_gene, fea_gene, mx = tr(gene_train,train_class_copy1,'gene','ttest')
+    # # clf_gene, fea_gene = tr(gene_train,train_class_copy1,'gene','ttest',20,'none')
+    #
+    # # clf_miRNA, fea_miRNA, _ = tr_ind(miRNA_train,train_class_copy2,'miRNA','ttest',5)
+    # # clf_meth, fea_meth, _ = tr_ind(meth_train,train_class_copy3,'meth','ttest',5)
+    # # clf_CNV, fea_CNV, _ = tr_ind(CNV_train,train_class_copy4,'CNV','chi-squared',5)
+    # # feat = select_features(gene_train, train_class, 'gene', 'ttest', 20)
+    # # print(feat)
+    # # # print(feat)
+    # # # print(feat)
+    # # # feats = select_features(CNV_train, train_class, 'CNV', 'chi-squared', 10)
+    # # # print(feats)
+    # # # gene_train_copy3 = gene_train_copy3[feat_selected]
+    # # # clf = svm.SVC(C=100, gamma="auto", kernel='rbf')
+    # # # clf.fit(gene_train_copy2, train_class_copy5.values.ravel())
+    #
+    # # #stuff for test
+    # # gene_train_copy2 = gene_train_copy2[fea_gene]
     # # gene_test = gene_test[fea_gene]
+    # # print(clf_gene.decision_function(gene_test))
+    # # print(test_class)
+    # # # print(clf_gene.decision_function(gene_train_copy2))
+    # # # print(train_class_copy2)
+    # # # print(clf_gene.predict(gene_test))
+    # # print('test accuracy:',clf_gene.score(gene_test,test_class))
+    # # print('train accuracy:',clf_gene.score(gene_train_copy2,train_class_copy2))
+    # # # print('train accuracy:',mx)
+    # # c1,c2,_ = roc_curve(test_class.values.ravel(), clf_gene.decision_function(gene_test).ravel())
+    # # print('auc:',auc(c1, c2))
+    # # c1, c2, _ = roc_curve(train_class.values.ravel(), clf_gene.decision_function(gene_train_copy2).ravel())
+    # # print('auc:', auc(c1, c2))
     # #
-    pred_miRNA = clf_miRNA.decision_function(miRNA_train_copy2)
-    pred_gene = clf_gene.decision_function(gene_train_copy2)
-    pred_meth = clf_meth.decision_function(meth_train_copy2)
-    pred_CNV = clf_CNV.decision_function(CNV_train_copy2)
-
-    # pred_miRNA = clf_miRNA.predict(miRNA_train_copy2)
-    # pred_gene = clf_gene.predict(gene_train_copy2)
-    # pred_meth = clf_meth.predict(meth_train_copy2)
-    # pred_CNV = clf_CNV.predict(CNV_train_copy2)
-
-    # # produces training data from part of test data
-    # miRNA_val1 = miRNA_test.iloc[0:30,:][fea_miRNA]
-    # gene_val1 = gene_test.iloc[0:30,:][fea_gene]
-    # meth_val1 = meth_test.iloc[0:30,:][fea_meth]
-    # CNV_val1 = CNV_test.iloc[0:30,:][fea_CNV]
+    # # # os.chdir("D:\\4813")
+    # # # gene_train_copy3.to_csv('feature_vis4.csv')
+    # # # train_class.to_csv('group4.csv')
+    # # #
+    # # # select features
+    # # miRNA_train_copy2 = miRNA_train_copy2[fea_miRNA]
+    # # gene_train_copy2 = gene_train_copy2[fea_gene]
+    # # meth_train_copy2 = meth_train_copy2[fea_meth]
+    # # CNV_train_copy2 = CNV_train_copy2[fea_CNV]
+    # # # # gene_test = gene_test[fea_gene]
+    # # # #
+    # # pred_miRNA = clf_miRNA.decision_function(miRNA_train_copy2)
+    # # pred_gene = clf_gene.decision_function(gene_train_copy2)
+    # # pred_meth = clf_meth.decision_function(meth_train_copy2)
+    # # pred_CNV = clf_CNV.decision_function(CNV_train_copy2)
     #
-    # val1_class = test_class.iloc[0:30,:]
+    # # pred_miRNA = clf_miRNA.predict(miRNA_train_copy2)
+    # # pred_gene = clf_gene.predict(gene_train_copy2)
+    # # pred_meth = clf_meth.predict(meth_train_copy2)
+    # # pred_CNV = clf_CNV.predict(CNV_train_copy2)
     #
-    # miRNA_val2 = miRNA_test.iloc[30:, :][fea_miRNA]
-    # gene_val2 = gene_test.iloc[30:, :][fea_gene]
-    # meth_val2 = meth_test.iloc[30:, :][fea_meth]
-    # CNV_val2 = CNV_test.iloc[30:, :][fea_CNV]
+    # # # produces training data from part of test data
+    # # miRNA_val1 = miRNA_test.iloc[0:30,:][fea_miRNA]
+    # # gene_val1 = gene_test.iloc[0:30,:][fea_gene]
+    # # meth_val1 = meth_test.iloc[0:30,:][fea_meth]
+    # # CNV_val1 = CNV_test.iloc[0:30,:][fea_CNV]
+    # #
+    # # val1_class = test_class.iloc[0:30,:]
+    # #
+    # # miRNA_val2 = miRNA_test.iloc[30:, :][fea_miRNA]
+    # # gene_val2 = gene_test.iloc[30:, :][fea_gene]
+    # # meth_val2 = meth_test.iloc[30:, :][fea_meth]
+    # # CNV_val2 = CNV_test.iloc[30:, :][fea_CNV]
+    # #
+    # # val2_class = test_class.iloc[30:,:]
+    # #
+    # #
+    # # pred_miRNA = clf_miRNA.decision_function(miRNA_val1)
+    # # pred_gene = clf_gene.decision_function(gene_val1)
+    # # pred_meth = clf_meth.decision_function(meth_val1)
+    # # pred_CNV = clf_CNV.decision_function(CNV_val1)
     #
-    # val2_class = test_class.iloc[30:,:]
+    # # new_feats = {'sample': miRNA_val1.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
+    # #              'CNV': pred_CNV}
+    # # # new_feats = {'sample':miRNA_train.index.values,'gene':pred_gene, 'CNV':pred_CNV, 'meth':pred_meth}
+    # # new_feats = pd.DataFrame(data=new_feats)
+    # # new_feats = new_feats.set_index('sample')
+    # # print(new_feats)
+    # # # new_feats.to_csv('new_feats3.csv')
+    # # # val1_class.to_csv('val1_class.csv')
+    # #
+    # # # new_feats = pd.read_csv('new_feats3.csv')
+    # # # new_feats = new_feats.set_index('sample')
+    # # # val1_class = pd.read_csv('val1_class.csv')
+    # # # val1_class = val1_class.set_index('case_id') # changes first column to be indices
+    # #
+    # #
+    # # # clf = tr_comb(new_feats,val1_class)
+    # # # clf = svm.SVC(C=.01, gamma="auto", kernel='linear')
+    # # # clf.fit(new_feats,val1_class.values.ravel())
+    # # # clf = KNeighborsClassifier(n_neighbors=10)
+    # # # clf.fit(new_feats, val1_class.values.ravel())
+    # #
+    # # # pred_miRNA = clf_miRNA.decision_function(miRNA_val2)
+    # # # pred_gene = clf_gene.decision_function(gene_val2)
+    # # # pred_meth = clf_meth.decision_function(meth_val2)
+    # # # pred_CNV = clf_CNV.decision_function(CNV_val2)
+    # # #
+    # # # new_feats_val = {'sample': miRNA_val2.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
+    # # #              'CNV': pred_CNV}
+    # # #
+    # # # new_feats_val = pd.DataFrame(data=new_feats_val)
+    # # # new_feats_val = new_feats_val.set_index('sample')
+    # # # new_feats_val.to_csv('new_feats_val3.csv')
+    # # # val2_class.to_csv('val2_class.csv')
+    # #
+    # # # new_feats_val = pd.read_csv('new_feats_val3.csv')
+    # # # new_feats_val = new_feats_val.set_index('sample')
+    # # # val2_class = pd.read_csv('val2_class.csv')
+    # # # val2_class = val2_class.set_index('case_id') # changes first column to be indices
+    # # # new_feats_val = new_feats_val.iloc[0:30, :]
+    # # # print(new_feats_val)
+    # #
+    # #
+    # # # clf = tr_comb(new_feats_val,val2_class)
+    # # # clf = svm.SVC(C=.01, gamma="auto", kernel='linear')
+    # # # clf.fit(new_feats_val,val2_class.values.ravel())
+    # #
+    # #
+    # # # res = clf.score(new_feats,val1_class)
+    # # # print(clf.predict(new_feats))
+    # # # print(val1_class)
+    # # # dv = clf.decision_function(new_feats_val)
+    # # # c1, c2, _ = roc_curve(val2_class.values.ravel(), dv.ravel())
+    # # # area = auc(c1, c2)
+    # # # print(area)
+    # # # print(res)
     #
-    #
-    # pred_miRNA = clf_miRNA.decision_function(miRNA_val1)
-    # pred_gene = clf_gene.decision_function(gene_val1)
-    # pred_meth = clf_meth.decision_function(meth_val1)
-    # pred_CNV = clf_CNV.decision_function(CNV_val1)
-
-    # new_feats = {'sample': miRNA_val1.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
-    #              'CNV': pred_CNV}
+    # new_feats = {'sample':miRNA_train.index.values,'miRNA':pred_miRNA, 'gene':pred_gene, 'meth':pred_meth, 'CNV':pred_CNV}
     # # new_feats = {'sample':miRNA_train.index.values,'gene':pred_gene, 'CNV':pred_CNV, 'meth':pred_meth}
     # new_feats = pd.DataFrame(data=new_feats)
     # new_feats = new_feats.set_index('sample')
-    # print(new_feats)
-    # # new_feats.to_csv('new_feats3.csv')
-    # # val1_class.to_csv('val1_class.csv')
-    #
-    # # new_feats = pd.read_csv('new_feats3.csv')
-    # # new_feats = new_feats.set_index('sample')
-    # # val1_class = pd.read_csv('val1_class.csv')
-    # # val1_class = val1_class.set_index('case_id') # changes first column to be indices
-    #
-    #
-    # # clf = tr_comb(new_feats,val1_class)
-    # # clf = svm.SVC(C=.01, gamma="auto", kernel='linear')
-    # # clf.fit(new_feats,val1_class.values.ravel())
-    # # clf = KNeighborsClassifier(n_neighbors=10)
-    # # clf.fit(new_feats, val1_class.values.ravel())
-    #
-    # # pred_miRNA = clf_miRNA.decision_function(miRNA_val2)
-    # # pred_gene = clf_gene.decision_function(gene_val2)
-    # # pred_meth = clf_meth.decision_function(meth_val2)
-    # # pred_CNV = clf_CNV.decision_function(CNV_val2)
+    # # # print(new_feats)
+    # # print(new_feats.head())
     # #
-    # # new_feats_val = {'sample': miRNA_val2.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
-    # #              'CNV': pred_CNV}
     # #
-    # # new_feats_val = pd.DataFrame(data=new_feats_val)
-    # # new_feats_val = new_feats_val.set_index('sample')
-    # # new_feats_val.to_csv('new_feats_val3.csv')
-    # # val2_class.to_csv('val2_class.csv')
+    # new_feats.to_csv('forkevin_df.csv')
     #
-    # # new_feats_val = pd.read_csv('new_feats_val3.csv')
-    # # new_feats_val = new_feats_val.set_index('sample')
-    # # val2_class = pd.read_csv('val2_class.csv')
-    # # val2_class = val2_class.set_index('case_id') # changes first column to be indices
-    # # new_feats_val = new_feats_val.iloc[0:30, :]
-    # # print(new_feats_val)
+    # # clf = tr_comb(new_feats,train_class_copy5)
+    # clf = tr_comb_grid(new_feats,train_class_copy5)
     #
-    #
-    # # clf = tr_comb(new_feats_val,val2_class)
-    # # clf = svm.SVC(C=.01, gamma="auto", kernel='linear')
-    # # clf.fit(new_feats_val,val2_class.values.ravel())
-    #
-    #
-    # # res = clf.score(new_feats,val1_class)
-    # # print(clf.predict(new_feats))
-    # # print(val1_class)
-    # # dv = clf.decision_function(new_feats_val)
-    # # c1, c2, _ = roc_curve(val2_class.values.ravel(), dv.ravel())
-    # # area = auc(c1, c2)
-    # # print(area)
-    # # print(res)
-
-    new_feats = {'sample':miRNA_train.index.values,'miRNA':pred_miRNA, 'gene':pred_gene, 'meth':pred_meth, 'CNV':pred_CNV}
-    # new_feats = {'sample':miRNA_train.index.values,'gene':pred_gene, 'CNV':pred_CNV, 'meth':pred_meth}
-    new_feats = pd.DataFrame(data=new_feats)
-    new_feats = new_feats.set_index('sample')
-    # # print(new_feats)
-    # print(new_feats.head())
-    #
-    #
-    # new_feats.to_csv('newfts1.csv')
-
-    clf = tr_comb(new_feats,train_class_copy5)
-
-    # validation
+    # #
+    # # validation
     miRNA_test = miRNA_test[fea_miRNA]
     gene_test = gene_test[fea_gene]
     meth_test = meth_test[fea_meth]
     CNV_test = CNV_test[fea_CNV]
+    # #
+    # pred_miRNA = clf_miRNA.predict_proba(miRNA_test)[:,0]
+    # pred_gene = clf_gene.predict_proba(gene_test)[:,0]
+    # pred_CNV = clf_CNV.predict_proba(CNV_test)[:,0]
+    # pred_meth = clf_meth.predict_proba(meth_test)[:,0]
 
 
-    pred_miRNA = clf_miRNA.decision_function(miRNA_test)
-    pred_gene = clf_gene.decision_function(gene_test)
-    pred_meth = clf_meth.decision_function(meth_test)
-    pred_CNV = clf_CNV.decision_function(CNV_test)
+    # pred_miRNA = clf_miRNA.decision_function(miRNA_test)
+    # pred_gene = clf_gene.decision_function(gene_test)
+    # pred_meth = clf_meth.decision_function(meth_test)
+    # pred_CNV = clf_CNV.decision_function(CNV_test)
 
     # pred_miRNA = clf_miRNA.predict(miRNA_test)
     # pred_gene = clf_gene.predict(gene_test)
@@ -345,154 +358,184 @@ def pipeline(rem_zeros):
     CNV_ind_res = clf_CNV.score(CNV_test,test_class)
     miRNA_ind_res = clf_miRNA.score(miRNA_test,test_class)
 
-    c1_gene, c2_gene, _ = roc_curve(test_class.values.ravel(), pred_gene.ravel())
-    c1_miRNA, c2_miRNA, _ = roc_curve(test_class.values.ravel(), pred_miRNA.ravel())
-    c1_CNV, c2_CNV, _ = roc_curve(test_class.values.ravel(), pred_CNV.ravel())
-    c1_meth, c2_meth, _ = roc_curve(test_class.values.ravel(), pred_meth.ravel())
+    c1_gene, c2_gene, _ = roc_curve(test_class.values.ravel(), clf_gene.decision_function(gene_test).ravel())
+    c1_miRNA, c2_miRNA, _ = roc_curve(test_class.values.ravel(), clf_miRNA.decision_function(miRNA_test).ravel())
+    c1_CNV, c2_CNV, _ = roc_curve(test_class.values.ravel(), clf_CNV.decision_function(CNV_test).ravel())
+    c1_meth, c2_meth, _ = roc_curve(test_class.values.ravel(), clf_meth.decision_function(meth_test).ravel())
 
     area_gene = auc(c1_gene, c2_gene)
     area_miRNA = auc(c1_miRNA, c2_miRNA)
     area_CNV = auc(c1_CNV, c2_CNV)
     area_meth = auc(c1_meth, c2_meth)
 
-
-    new_feats_val = {'sample': miRNA_test.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
-                 'CNV': pred_CNV}
-    # new_feats_val = {'sample': miRNA_test.index.values,'gene': pred_gene,'CNV': pred_CNV,'meth':pred_meth}
-    new_feats_val = pd.DataFrame(data=new_feats_val)
-    new_feats_val = new_feats_val.set_index('sample')
-
-    # new_feats_val.to_csv('newftsval1.csv')
-
-
-    # weight_vote(new_feats_val,test_class,[miRNA_ind_res,gene_ind_res,meth_ind_res,CNV_ind_res])
-
-
-    fin = clf.score(new_feats_val,test_class)
-    pred = clf.decision_function(new_feats_val)
-    c1, c2, _ = roc_curve(test_class.values.ravel(), pred.ravel())
-    area = auc(c1, c2)
-    # fin = maj_vote(new_feats_val,test_class)
-    print('gene individual result:',gene_ind_res,area_gene)
-    print('meth individual result:',meth_ind_res,area_meth)
-    print('CNV individual result:',CNV_ind_res,area_CNV)
-    print('miRNA individual result:',miRNA_ind_res,area_miRNA)
-    print('auc',area)
-    print('integration result',fin)
+    # import matplotlib.pyplot as plt
+    # plt.title('Receiver Operating Characteristic')
+    # plt.plot(c1_meth, c2_meth, 'b', label='AUC = %0.2f' % area_meth)
+    # plt.legend(loc='lower right')
+    # plt.plot([0, 1], [0, 1], 'r--')
+    # plt.xlim([0, 1])
+    # plt.ylim([0, 1])
+    # plt.ylabel('True Positive Rate')
+    # plt.xlabel('False Positive Rate')
+    # plt.show()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # ### BAR GRAPH COMPARING INTEGRATION OF DIFF MODALITY COMBOS ### - must comment out above integration
+    # new_feats_val = {'sample': miRNA_test.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
+    #              'CNV': pred_CNV}
+    # # new_feats_val = {'sample': miRNA_test.index.values,'gene': pred_gene,'CNV': pred_CNV,'meth':pred_meth}
+    # new_feats_val = pd.DataFrame(data=new_feats_val)
+    # new_feats_val = new_feats_val.set_index('sample')
     #
-    # fins = []
-    # areas = []
-    # fin1s = []
-    # combinations = [["meth"],["miRNA"],["gene"],["CNV"],["meth","miRNA"],["meth","gene"],["meth","CNV"],
-    #                 ["miRNA","gene"],["miRNA","CNV"],["gene","CNV"],["meth","miRNA","gene"],
-    #                 ["meth","miRNA","CNV"],["miRNA","gene","CNV"],
-    #                 ["meth","gene","CNV"],["meth","miRNA","gene","CNV"]]
-    # # select features
-    # miRNA_train_copy2 = miRNA_train_copy2[fea_miRNA]
-    # gene_train_copy2 = gene_train_copy2[fea_gene]
-    # meth_train_copy2 = meth_train_copy2[fea_meth]
-    # CNV_train_copy2 = CNV_train_copy2[fea_CNV]
-    # # gene_test = gene_test[fea_gene]
-    # #
+    # # new_feats_val.to_csv('withpredprob.csv')
+    # # test_class.to_csv('testclass.csv')
+    #
+    #
+    # # weight_vote(new_feats_val,test_class,[miRNA_ind_res,gene_ind_res,meth_ind_res,CNV_ind_res])
+    #
+    #
+    # fin = clf.score(new_feats_val,test_class)
+    # pred = clf.decision_function(new_feats_val)
+    # c1, c2, _ = roc_curve(test_class.values.ravel(), pred.ravel())
+    # area = auc(c1, c2)
+    # # fin = maj_vote(new_feats_val,test_class)
+    # print('gene individual result:',gene_ind_res,area_gene)
+    # print('meth individual result:',meth_ind_res,area_meth)
+    # print('CNV individual result:',CNV_ind_res,area_CNV)
+    # print('miRNA individual result:',miRNA_ind_res,area_miRNA)
+    # print('auc',area)
+    # print('integration result',fin)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ### BAR GRAPH COMPARING INTEGRATION OF DIFF MODALITY COMBOS ### - must comment out above integration
+
+    fins = []
+    areas = []
+    fin1s = []
+    combinations = [["meth"],["miRNA"],["gene"],["CNV"],["meth","miRNA"],["meth","gene"],["meth","CNV"],
+                    ["miRNA","gene"],["miRNA","CNV"],["gene","CNV"],["meth","miRNA","gene"],
+                    ["meth","miRNA","CNV"],["miRNA","gene","CNV"],
+                    ["meth","gene","CNV"],["meth","miRNA","gene","CNV"]]
+    # select features
+    miRNA_train_copy2 = miRNA_train_copy2[fea_miRNA]
+    gene_train_copy2 = gene_train_copy2[fea_gene]
+    meth_train_copy2 = meth_train_copy2[fea_meth]
+    CNV_train_copy2 = CNV_train_copy2[fea_CNV]
+    # gene_test = gene_test[fea_gene]
+    #
+
+    pred_miRNA = clf_miRNA.predict_proba(miRNA_train_copy2)[:, 0]
+    pred_gene = clf_gene.predict_proba(gene_train_copy2)[:, 0]
+    pred_CNV = clf_CNV.predict_proba(CNV_train_copy2)[:, 0]
+    pred_meth = clf_meth.predict_proba(meth_train_copy2)[:, 0]
+
     # pred_miRNA = clf_miRNA.decision_function(miRNA_train_copy2)
     # pred_gene = clf_gene.decision_function(gene_train_copy2)
     # pred_meth = clf_meth.decision_function(meth_train_copy2)
     # pred_CNV = clf_CNV.decision_function(CNV_train_copy2)
-    # # pred_gene = clf_gene.decision_function(gene_test)
-    # # print(pred_gene)
-    # # print(clf_gene.predict(gene_test))
-    # # c1,c2,_ = roc_curve(test_class.values.ravel(), pred_gene.ravel())
-    # # print(auc(c1, c2))
-    # # print(clf_gene.score(gene_test,test_class))
-    # #
-    # new_feats = {'sample': miRNA_train.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
-    #              'CNV': pred_CNV}
-    # new_feats = pd.DataFrame(data=new_feats)
-    # new_feats = new_feats.set_index('sample')
-    # # print(new_feats)
-    # # new_feats.to_csv('new_feats.csv')
-    # # train_class_copy5.to_csv('new_feats_labels.csv')
-    # print(new_feats.head())
+    # pred_gene = clf_gene.decision_function(gene_test)
+    # print(pred_gene)
+    # print(clf_gene.predict(gene_test))
+    # c1,c2,_ = roc_curve(test_class.values.ravel(), pred_gene.ravel())
+    # print(auc(c1, c2))
+    # print(clf_gene.score(gene_test,test_class))
     #
-    # for com in combinations:
-    #     print(com)
-    #     clf = tr_comb(new_feats[com], train_class_copy5)
-    #
-    #     # validation
-    #     miRNA_test = miRNA_test[fea_miRNA]
-    #     gene_test = gene_test[fea_gene]
-    #     meth_test = meth_test[fea_meth]
-    #     CNV_test = CNV_test[fea_CNV]
-    #
-    #     pred_miRNA = clf_miRNA.decision_function(miRNA_test)
-    #     pred_gene = clf_gene.decision_function(gene_test)
-    #     pred_meth = clf_meth.decision_function(meth_test)
-    #     pred_CNV = clf_CNV.decision_function(CNV_test)
-    #
-    #     fin1 = clf_gene.score(gene_test, test_class)
-    #
-    #     new_feats_val = {'sample': miRNA_test.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
-    #                      'CNV': pred_CNV}
-    #     new_feats_val = pd.DataFrame(data=new_feats_val)
-    #     new_feats_val = new_feats_val.set_index('sample')
-    #     # print(new_feats_val.head())
-    #
-    #     fin = clf.score(new_feats_val[com], test_class)
-    #     pred = clf.decision_function(new_feats_val[com])
-    #     c1, c2, _ = roc_curve(test_class.values.ravel(), pred.ravel())
-    #     area = auc(c1, c2)
-    #     # print(fin1)
-    #     print(area)
-    #     print(fin)
-    #     fin1s.append(fin1)
-    #     areas.append(area)
-    #     fins.append(fin)
-    # # print(fin1s)
-    #
-    # fins[0] = meth_ind_res
-    # fins[1] = miRNA_ind_res
-    # fins[2] = gene_ind_res
-    # fins[3] = CNV_ind_res
-    # areas[0] = area_meth
-    # areas[1] = area_miRNA
-    # areas[2] = area_gene
-    # areas[3] = area_CNV
-    #
-    # print(areas)
-    # print(fins)
-    #
-    # n_groups = 15
-    #
+    new_feats = {'sample': miRNA_train.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
+                 'CNV': pred_CNV}
+    new_feats = pd.DataFrame(data=new_feats)
+    new_feats = new_feats.set_index('sample')
+    # print(new_feats)
+    # new_feats.to_csv('new_feats.csv')
+    # train_class_copy5.to_csv('new_feats_labels.csv')
+    print(new_feats.head())
+
+    clfs = []
+    cvals = []
+    for com in combinations:
+        print(com)
+        clf = tr_comb(new_feats[com], train_class_copy5)
+        # clf = tr_comb_grid(new_feats[com],train_class_copy5)
+        # clf = maj_vote(new_feats[com],train_class_copy5)
+        clfs.append(clf)
+
+        # validation
+        miRNA_test = miRNA_test[fea_miRNA]
+        gene_test = gene_test[fea_gene]
+        meth_test = meth_test[fea_meth]
+        CNV_test = CNV_test[fea_CNV]
+
+        # pred_miRNA = clf_miRNA.decision_function(miRNA_test)
+        # pred_gene = clf_gene.decision_function(gene_test)
+        # pred_meth = clf_meth.decision_function(meth_test)
+        # pred_CNV = clf_CNV.decision_function(CNV_test)
+
+        pred_miRNA = clf_miRNA.predict_proba(miRNA_test)[:, 0]
+        pred_gene = clf_gene.predict_proba(gene_test)[:, 0]
+        pred_CNV = clf_CNV.predict_proba(CNV_test)[:, 0]
+        pred_meth = clf_meth.predict_proba(meth_test)[:, 0]
+
+
+        # fin1 = clf_gene.score(gene_test, test_class)
+
+        new_feats_val = {'sample': miRNA_test.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
+                         'CNV': pred_CNV}
+        new_feats_val = pd.DataFrame(data=new_feats_val)
+        new_feats_val = new_feats_val.set_index('sample')
+        # print(new_feats_val.head())
+
+        fin = clf.score(new_feats_val[com], test_class)
+        pred = clf.decision_function(new_feats_val[com])
+        c1, c2, _ = roc_curve(test_class.values.ravel(), pred.ravel())
+        area = auc(c1, c2)
+        cvals.append([c1,c2,area])
+        # print(fin1)
+        print(area)
+        print(fin)
+        # fin1s.append(fin1)
+        areas.append(area)
+        fins.append(fin)
+    # print(fin1s)
+
+    fins[0] = meth_ind_res
+    fins[1] = miRNA_ind_res
+    fins[2] = gene_ind_res
+    fins[3] = CNV_ind_res
+    areas[0] = area_meth
+    areas[1] = area_miRNA
+    areas[2] = area_gene
+    areas[3] = area_CNV
+
+    print(areas)
+    print(fins)
+
+    n_groups = 15
+
     # fig, ax = plt.subplots()
     #
     # index = np.arange(n_groups)
@@ -521,10 +564,28 @@ def pipeline(rem_zeros):
     #
     # fig.tight_layout()
     # plt.show()
-    #
-    # ### END ###
+    indx = np.argmax(fins)
+    # dump(clfs[indx], 'clf.joblib')
 
-pipeline(True)
+    tr_score = clfs[indx].score(new_feats[combinations[indx]],train_class_copy5)
+    te_score = clfs[indx].score(new_feats_val[combinations[indx]],test_class)
+
+    # import matplotlib.pyplot as plt
+    # plt.title('Receiver Operating Characteristic')
+    # plt.plot(cvals[indx][0], cvals[indx][1], 'b', label='AUC = %0.2f' % cvals[indx][2])
+    # plt.legend(loc='lower right')
+    # plt.plot([0, 1], [0, 1], 'r--')
+    # plt.xlim([0, 1])
+    # plt.ylim([0, 1])
+    # plt.ylabel('True Positive Rate')
+    # plt.xlabel('False Positive Rate')
+    # plt.show()
+
+    return tr_score,te_score
+
+    ### END ###
+
+# pipeline(True,42)
 
 
 

@@ -24,6 +24,7 @@ def select_features(X,y,modality,method,n_feats):
             X = X.loc[:, init_feats]
             print('check1')
         elif modality == 'CNV':
+            X, y = discretize(X, y, modality, 1)
             init_feats = chi(X, y, 2000)
             X = X.loc[:, init_feats]
 
@@ -54,9 +55,14 @@ def select_features(X,y,modality,method,n_feats):
         if modality == 'miRNA':
             X, y = discretize(X, y, modality, 2)
 
-        if modality == 'CNV' or modality == 'gene' or modality == 'meth':
+        if modality == 'gene' or modality == 'meth':
             X, y = discretize(X, y, modality, 1)
             init_feats = chi(X, y, 5000)
+            X = X.loc[:, init_feats]
+
+        if modality == 'CNV':
+            X, y = discretize(X, y, modality, 1)
+            init_feats = chi(X, y, 1000)
             X = X.loc[:, init_feats]
 
         feat_selected = minfo(X,y,n_feats)

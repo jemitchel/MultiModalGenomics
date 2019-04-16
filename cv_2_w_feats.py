@@ -7,7 +7,7 @@ import numpy as np
 from sklearn import svm
 
 # this does cross validation and iterates over different number of features
-def do_cv(X, y, X_test, y_test, f_sel, modality,n_feats):
+def do_cv(X, y, X_test, y_test, f_sel, modality,n_feats,split):
     max_n_feats = n_feats
     feat_iters = []
     X2 = pd.DataFrame(X, copy=True)  # copies the original feature dataframe
@@ -27,7 +27,7 @@ def do_cv(X, y, X_test, y_test, f_sel, modality,n_feats):
     best_params = []
     hmap_data = np.array(['kernel','C','num_feats','score'])
 
-    for i in range(5, max_n_feats, 5):
+    for i in range(2, max_n_feats, split):
         print(i)
         num_feats.append(i)
         X3 = pd.DataFrame(X2, copy=True)  # copies the original feature dataframe
@@ -42,7 +42,7 @@ def do_cv(X, y, X_test, y_test, f_sel, modality,n_feats):
 
         # do this is picking clf from f1 score or cohens kappa. makes it give an accuracy output
         X5 = X2[fea_]
-        clf = svm.SVC(gamma='auto',class_weight='balanced',C=clf.best_params_['C'],kernel=clf.best_params_['kernel'])
+        clf = svm.SVC(gamma='auto',class_weight='balanced',C=clf.best_params_['C'],kernel=clf.best_params_['kernel'],probability=True)
         # clf = svm.SVC(gamma='auto',C=clf.best_params_['C'],kernel=clf.best_params_['kernel'])
         clf.fit(X5, y2.values.ravel())
         best_clfs.append(clf) #this is list from which final clf is selected

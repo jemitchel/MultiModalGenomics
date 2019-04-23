@@ -7,6 +7,7 @@ from feat_select import select_features
 from train_comb import tr_comb
 from train_comb import tr_comb_grid
 from train_comb import maj_vote
+from train_comb import bayes
 # from train_comb import weight_vote
 from sklearn.metrics import roc_curve, auc
 from imblearn.over_sampling import SMOTE
@@ -23,7 +24,12 @@ from feat_curve import make_feat_curve
 from cv_2_w_feats import do_cv
 from sklearn.neighbors import KNeighborsClassifier
 from joblib import dump, load
+import matplotlib.pyplot as plt
+from lifelines import KaplanMeierFitter
+import warnings
 
+# suppresses the warning that pops up when F-score encounters all 1 class prediction
+warnings.filterwarnings("ignore")
 
 def pipeline(rem_zeros,seed):
 
@@ -101,12 +107,12 @@ def pipeline(rem_zeros,seed):
     test_class = test_class.set_index('case_id') # changes first column to be indices
 
 
-    train_class[train_class == 1] = 2
-    train_class[train_class == 0] = 1
-    train_class[train_class == 2] = 0
-    test_class[test_class == 1] = 2
-    test_class[test_class == 0] = 1
-    test_class[test_class == 2] = 0
+    # train_class[train_class == 1] = 2
+    # train_class[train_class == 0] = 1
+    # train_class[train_class == 2] = 0
+    # test_class[test_class == 1] = 2
+    # test_class[test_class == 0] = 1
+    # test_class[test_class == 2] = 0
 
 
     # # for doing quantile scaling instead
@@ -139,7 +145,7 @@ def pipeline(rem_zeros,seed):
 
 
 
-    # gen_curve(miRNA,lbl,'miRNA',10)
+    # gen_curve(CNV,lbl,'CNV',10)
     miRNA_train_copy2 = pd.DataFrame(miRNA_train, copy=True)
     meth_train_copy2 = pd.DataFrame(meth_train, copy=True)
     CNV_train_copy2 = pd.DataFrame(CNV_train, copy=True)
@@ -154,31 +160,55 @@ def pipeline(rem_zeros,seed):
     #
     # # make_feat_curve(gene_train,train_class,gene_test,test_class,'mrmr','gene')
 
-    clf_gene, fea_gene,_ = do_cv(gene_train,train_class_copy1,gene_test,test_class,'ttest','gene',36,4)
-    clf_miRNA, fea_miRNA,_ = do_cv(miRNA_train,train_class_copy2,miRNA_test,test_class,'minfo','miRNA',120,10)
-    clf_meth, fea_meth,_ = do_cv(meth_train,train_class_copy3,meth_test,test_class,'minfo','meth',60,4)
-    clf_CNV, fea_CNV,_ = do_cv(CNV_train,train_class_copy4,CNV_test,test_class,'mrmr','CNV',24,4)
+    # clf_gene, fea_gene,_ = do_cv(gene_train,train_class_copy1,gene_test,test_class,'ttest','gene',50,4)
 
-    # dump(clf_gene, 'clf_gene.joblib')
-    # dump(fea_gene, 'fea_gene.joblib')
-    # dump(clf_meth, 'clf_meth.joblib')
-    # dump(fea_meth, 'fea_meth.joblib')
-    # dump(clf_CNV, 'clf_CNV.joblib')
-    # dump(fea_CNV, 'fea_CNV.joblib')
-    # dump(clf_miRNA, 'clf_miRNA.joblib')
-    # dump(fea_miRNA, 'fea_miRNA.joblib')
+    # # current
+    clf_gene, fea_gene,_ = do_cv(gene_train,train_class_copy1,gene_test,test_class,'ttest','gene',40,2)
+    # # # clf_miRNA, fea_miRNA,_ = do_cv(miRNA_train,train_class_copy2,miRNA_test,test_class,'minfo','miRNA',120,10)
+    clf_miRNA, fea_miRNA,_ = do_cv(miRNA_train,train_class_copy2,miRNA_test,test_class,'minfo','miRNA',24,2)
+    clf_meth, fea_meth,_ = do_cv(meth_train,train_class_copy3,meth_test,test_class,'minfo','meth',60,2)
+    clf_CNV, fea_CNV,_ = do_cv(CNV_train,train_class_copy4,CNV_test,test_class,'minfo','CNV',50,2)
+    # # # clf_CNV, fea_CNV,_ = do_cv(CNV_train,train_class_copy4,CNV_test,test_class,'mrmr','CNV',5,1)
+
+    # # produced clf3
+    # clf_gene, fea_gene,_ = do_cv(gene_train,train_class_copy1,gene_test,test_class,'ttest','gene',36,4)
+    # clf_miRNA, fea_miRNA,_ = do_cv(miRNA_train,train_class_copy2,miRNA_test,test_class,'minfo','miRNA',34,4)
+    # clf_meth, fea_meth,_ = do_cv(meth_train,train_class_copy3,meth_test,test_class,'minfo','meth',60,4)
+    # clf_CNV, fea_CNV,_ = do_cv(CNV_train,train_class_copy4,CNV_test,test_class,'mrmr','CNV',24,4)
+
+    # for testing
+    # clf_gene, fea_gene,_ = do_cv(gene_train,train_class_copy1,gene_test,test_class,'ttest','gene',80,2)
+    # clf_miRNA, fea_miRNA,_ = do_cv(miRNA_train,train_class_copy2,miRNA_test,test_class,'minfo','miRNA',120,2)
+    # clf_meth, fea_meth,_ = do_cv(meth_train,train_class_copy3,meth_test,test_class,'minfo','meth',80,2)
+    # clf_CNV, fea_CNV,_ = do_cv(CNV_train,train_class_copy4,CNV_test,test_class,'minfo','CNV',50,2)
+
+    # dump(clf_gene, 'clf_gene4.joblib')
+    # dump(fea_gene, 'fea_gene4.joblib')
+    # dump(clf_meth, 'clf_meth4.joblib')
+    # dump(fea_meth, 'fea_meth4.joblib')
+    # dump(clf_CNV, 'clf_CNV4.joblib')
+    # dump(fea_CNV, 'fea_CNV4.joblib')
+    # dump(clf_miRNA, 'clf_miRNA4.joblib')
+    # dump(fea_miRNA, 'fea_miRNA4.joblib')
     # #
-    # clf_gene = load('clf_gene.joblib')
-    # fea_gene = load('fea_gene.joblib')
-    # clf_meth = load('clf_meth.joblib')
-    # fea_meth = load('fea_meth.joblib')
-    # clf_CNV = load('clf_CNV.joblib')
-    # fea_CNV = load('fea_CNV.joblib')
-    # clf_miRNA = load('clf_miRNA.joblib')
-    # fea_miRNA = load('fea_miRNA.joblib')
-    # cool = pd.DataFrame(fea_gene)
-    # cool.to_csv('cool.csv')
-    # #
+    # clf_gene = load('clf_gene4.joblib')
+    # fea_gene = load('fea_gene4.joblib')
+    # clf_meth = load('clf_meth4.joblib')
+    # fea_meth = load('fea_meth4.joblib')
+    # clf_CNV = load('clf_CNV4.joblib')
+    # fea_CNV = load('fea_CNV4.joblib')
+    # clf_miRNA = load('clf_miRNA4.joblib')
+    # fea_miRNA = load('fea_miRNA4.joblib')
+    # clf = load('clf3.joblib')
+
+    # print(clf_gene)
+    # print(clf_miRNA)
+    # print(clf_meth)
+    # print(clf_CNV)
+
+    # # cool = pd.DataFrame(fea_gene)
+    # # cool.to_csv('cool.csv')
+    # # #
     # pred_miRNA = clf_miRNA.predict_proba(miRNA_train_copy2[fea_miRNA])[:,0]
     # pred_gene = clf_gene.predict_proba(gene_train_copy2[fea_gene])[:,0]
     # pred_CNV = clf_CNV.predict_proba(CNV_train_copy2[fea_CNV])[:,0]
@@ -335,7 +365,7 @@ def pipeline(rem_zeros,seed):
     gene_test = gene_test[fea_gene]
     meth_test = meth_test[fea_meth]
     CNV_test = CNV_test[fea_CNV]
-    # #
+
     # pred_miRNA = clf_miRNA.predict_proba(miRNA_test)[:,0]
     # pred_gene = clf_gene.predict_proba(gene_test)[:,0]
     # pred_CNV = clf_CNV.predict_proba(CNV_test)[:,0]
@@ -357,6 +387,8 @@ def pipeline(rem_zeros,seed):
     meth_ind_res = clf_meth.score(meth_test,test_class)
     CNV_ind_res = clf_CNV.score(CNV_test,test_class)
     miRNA_ind_res = clf_miRNA.score(miRNA_test,test_class)
+    # print(gene_ind_res)
+
 
     c1_gene, c2_gene, _ = roc_curve(test_class.values.ravel(), clf_gene.decision_function(gene_test).ravel())
     c1_miRNA, c2_miRNA, _ = roc_curve(test_class.values.ravel(), clf_miRNA.decision_function(miRNA_test).ravel())
@@ -448,7 +480,7 @@ def pipeline(rem_zeros,seed):
     meth_train_copy2 = meth_train_copy2[fea_meth]
     CNV_train_copy2 = CNV_train_copy2[fea_CNV]
     # gene_test = gene_test[fea_gene]
-    #
+
 
     pred_miRNA = clf_miRNA.predict_proba(miRNA_train_copy2)[:, 0]
     pred_gene = clf_gene.predict_proba(gene_train_copy2)[:, 0]
@@ -459,13 +491,12 @@ def pipeline(rem_zeros,seed):
     # pred_gene = clf_gene.decision_function(gene_train_copy2)
     # pred_meth = clf_meth.decision_function(meth_train_copy2)
     # pred_CNV = clf_CNV.decision_function(CNV_train_copy2)
-    # pred_gene = clf_gene.decision_function(gene_test)
-    # print(pred_gene)
+
     # print(clf_gene.predict(gene_test))
     # c1,c2,_ = roc_curve(test_class.values.ravel(), pred_gene.ravel())
     # print(auc(c1, c2))
     # print(clf_gene.score(gene_test,test_class))
-    #
+
     new_feats = {'sample': miRNA_train.index.values, 'miRNA': pred_miRNA, 'gene': pred_gene, 'meth': pred_meth,
                  'CNV': pred_CNV}
     new_feats = pd.DataFrame(data=new_feats)
@@ -479,8 +510,9 @@ def pipeline(rem_zeros,seed):
     cvals = []
     for com in combinations:
         print(com)
-        clf = tr_comb(new_feats[com], train_class_copy5)
-        # clf = tr_comb_grid(new_feats[com],train_class_copy5)
+        # clf = tr_comb(new_feats[com], train_class_copy5)
+        clf = tr_comb_grid(new_feats[com],train_class_copy5)
+        # clf = bayes(new_feats[com],train_class_copy5)
         # clf = maj_vote(new_feats[com],train_class_copy5)
         clfs.append(clf)
 
@@ -530,6 +562,10 @@ def pipeline(rem_zeros,seed):
     areas[1] = area_miRNA
     areas[2] = area_gene
     areas[3] = area_CNV
+    clfs[0] = clf_meth
+    clfs[1] = clf_miRNA
+    clfs[2] = clf_gene
+    clfs[3] = clf_CNV
 
     print(areas)
     print(fins)
@@ -559,18 +595,50 @@ def pipeline(rem_zeros,seed):
     # ax.set_ylabel('Scores')
     #
     # ax.set_xticks(index + bar_width / 2)
-    # ax.set_xticklabels(combinations)
+    # # ax.set_xticklabels(combinations)
+    # ax.set_xticklabels(['meth','miRNA','gene','CNV','meth\nmiRNA','meth\ngene','meth\nCNV','miRNA\ngene','miRNA\nCNV',
+    #                     'gene\nCNV','meth\nmiRNA\ngene','meth\nmiRNA\nCNV','miRNA\ngene\nCNV','meth\ngene\nCNV',
+    #                     'meth\nmiRNA\ngene\nCNV'])
     # ax.legend()
     #
     # fig.tight_layout()
     # plt.show()
+
     indx = np.argmax(fins)
-    # dump(clfs[indx], 'clf.joblib')
+    # print("indx:",indx)
+    # dump(clfs[indx], 'clf3_1.joblib')
+
+    # clf = load('clf3.joblib')
 
     tr_score = clfs[indx].score(new_feats[combinations[indx]],train_class_copy5)
     te_score = clfs[indx].score(new_feats_val[combinations[indx]],test_class)
 
-    # import matplotlib.pyplot as plt
+    clf = clfs[indx]
+
+    # count = 0
+    # preds = clf.predict(new_feats[combinations[indx]])
+    # for i in range(train_class_copy5.shape[0]):
+    #     if preds[i] == train_class_copy5.iloc[i,0]:
+    #         count += 1
+    #
+    # print(count)
+    #
+    # count = 0
+    # tots = 0
+    # preds = clf.predict(new_feats[combinations[indx]])
+    # for i in range(train_class_copy5.shape[0]):
+    #     if preds[i] == 1 and train_class_copy5.iloc[i, 0] == 0:
+    #         count += 1
+    #         tots += 1
+    #     elif train_class_copy5.iloc[i, 0] == 0:
+    #         tots += 1
+    #
+    # print(count)
+    # print(tots)
+
+
+
+
     # plt.title('Receiver Operating Characteristic')
     # plt.plot(cvals[indx][0], cvals[indx][1], 'b', label='AUC = %0.2f' % cvals[indx][2])
     # plt.legend(loc='lower right')
@@ -585,7 +653,80 @@ def pipeline(rem_zeros,seed):
 
     ### END ###
 
-# pipeline(True,42)
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # # KM curve
+    #
+    # surv = labels.iloc[ndx, :]
+    #
+    # ax = plt.subplot(111)
+    # # print(surv.head())
+    # kmf = KaplanMeierFitter()
+    # m = max(surv["days_to_death"])
+    # fill_max = {"days_to_death": m}
+    # surv = surv.fillna(value=fill_max)
+    # T = surv["days_to_death"]
+    # surv = surv.replace("alive", False)
+    # surv = surv.replace("dead", True)
+    # E = surv["vital_status"]
+    # # kmf.fit(T, event_observed=E)
+    # # kmf.plot()
+    # # print(T)
+    # # print(E)
+    # # class0 = (surv["label"] == 0)
+    # # kmf.fit(T[class0], event_observed=E[class0], label="Low Survival (<5 years)")
+    # # kmf.plot_survival_function(ax=ax, ci_show=False, fontsize=20)
+    # # kmf.fit(T[~class0], event_observed=E[~class0], label="High Survival (>= 5 years)")
+    # # kmf.plot_survival_function(ax=ax, ci_show=False, fontsize=20)
+    # # ax.set_xlabel("Duration (days)", fontsize=20)
+    # # ax.set_ylabel("Percent Alive", fontsize=20)
+    # # ax.set_title("Breast Cancer Kaplan Meier Survival Curve", fontsize=32)
+    #
+    # surv2 = surv.copy(True)
+    # print(surv2)
+    # print(test_labels)
+    # surv2 = surv2.loc[surv2["case_id"].isin(train_labels.values)]
+    # print(surv2)
+    # prd = clf.predict(new_feats[["meth","miRNA","gene"]])
+    # print(clf.score(new_feats[["meth", "miRNA", "gene"]], train_labels))
+    # print(prd)
+    # # for i, p in enumerate(prd):
+    # #     if p == 0:
+    # #         prd[i] = 1
+    # #     if p == 1:
+    # #         prd[i] = 0
+    # print(prd)
+    # surv2["label_new"] = prd
+    # print(sum(surv2["label"] == surv2["label_new"]))
+    # # surv2["label"] = prd
+    # print(surv2)
+    # T2 = surv2["days_to_death"]
+    # E2 = surv2["vital_status"]
+    # class02 = (surv2["label_new"] == 0)
+    # kmf.fit(T2[class02], event_observed=E2[class02], label="Low Survival")
+    # kmf.plot_survival_function(ax=ax, ci_show=False)
+    # kmf.fit(T2[~class02], event_observed=E2[~class02], label="High Survival")
+    # kmf.plot_survival_function(ax=ax, ci_show=False)
+    # print(surv2.values)
+    # ax.set_xlabel("Duration (days)")
+    # ax.set_ylabel("Percent Alive")
+    # ax.set_title("Kaplan Meier Survival Curve: Actual vs. Predicted")
+    # ax.set_ylim((0, 1))
+    # print(clf.score(new_feats[["meth", "miRNA","gene"]], train_labels))
+
+
+# print(pipeline(True,42))
 
 
 

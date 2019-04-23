@@ -48,20 +48,24 @@ def gen_curve(frame,lbl,modality,n_times):
         y_train_copy = pd.DataFrame(y_train, copy=True)
 
         if modality == 'gene':
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',36)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',36)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene', 40, 2)
             # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',120)
 
         elif modality == 'CNV':
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'mrmr', 'CNV',20)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'mrmr', 'CNV',20)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV', 50, 2)
             # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV',120)
 
         elif modality == 'meth':
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',60)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',60)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth', 60, 2)
             # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',120)
 
         else:
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',24, 2)
             # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',30)
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',120)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',120)
 
 
         X_test = X_test[feats]
@@ -79,8 +83,9 @@ def gen_curve(frame,lbl,modality,n_times):
     plt.scatter(pt_x,pt_y)
     x = np.linspace(0, 1, 100)
     plt.plot(x,x)
-    plt.xlabel('Training Accuracy')
-    plt.ylabel('Test Set Accuracy')
+    plt.xlabel('Training Accuracy',fontsize=15)
+    plt.ylabel('Test Set Accuracy',fontsize=15)
+    # plt.tick_params(labelsize = 10)
     name = ''
     if modality == 'gene':
         name = 'Gene Expression'
@@ -90,7 +95,7 @@ def gen_curve(frame,lbl,modality,n_times):
         name = 'Methylation'
     elif modality == 'miRNA':
         name = 'miRNA'
-    plt.title(name + ' Validation Plot')
+    plt.title(name + ' Validation Plot',fontsize=20)
     plt.show()
 
 

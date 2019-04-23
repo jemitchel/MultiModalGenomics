@@ -15,6 +15,7 @@ from sklearn.ensemble import VotingClassifier
 from sklearn.metrics import cohen_kappa_score
 from sklearn.metrics import make_scorer
 from sklearn import preprocessing
+from sklearn.naive_bayes import ComplementNB
 
 
 # # loads precomputed features and response
@@ -128,17 +129,22 @@ def tr_comb_grid(X,y):
 
     c_kap = make_scorer(cohen_kappa_score)
     # parameters = {'kernel': ('linear','poly','rbf','sigmoid'), 'C': [.001,.005,0.1,.5,1,1.5,2,2.5,3,4,5,10,15,20,25,30,50,75,100],'gamma':[.01,.1,.5,.75,1,10]}
-    parameters = {'kernel': ('linear','poly','rbf','sigmoid'), 'C': [.001,.005,0.1,.5,1,1.5,2,2.5,3,4,5,10],'gamma':[.01,.1,.5,.75,1,1.5,2]}
+    parameters = {'kernel': ('linear','poly','rbf','sigmoid'), 'C': [.001,.005,.01,.05,0.1,.25,.5,1,1.25,1.5,2,2.5,3,4,5,10],'gamma':[.01,.1,.25,.5,.75,1,1.25,1.5,2]}
+    # parameters = {'kernel': ('linear','poly','rbf','sigmoid'), 'C': [.001,.005,0.1,.5,1,1.5,2,2.5,3,4,5,10]}
     svc = svm.SVC(gamma="auto",class_weight='balanced')
-    clf = GridSearchCV(svc, parameters, cv=4,iid=False)
+    clf = GridSearchCV(svc, parameters, cv=4,iid=False,scoring=c_kap)
     # clf = RandomizedSearchCV(svc, parameters, cv=4,iid=False,n_iter=75)
     clf.fit(X,y.values.ravel())
     print(clf.best_params_)
-    clf = svm.SVC(gamma='auto',class_weight='balanced',C=clf.best_params_['C'],kernel=clf.best_params_['kernel'])
+    clf = svm.SVC(gamma=clf.best_params_['gamma'],class_weight='balanced',C=clf.best_params_['C'],kernel=clf.best_params_['kernel'],probability=True)
     # clf = svm.SVC(gamma='auto',C=clf.best_params_['C'],kernel=clf.best_params_['kernel'])
     clf.fit(X, y.values.ravel())
     return clf
 
+def bayes(X,y):
+    clf = ComplementNB()
+    clf.fit(X, y.values.ravel())
+    return clf
 
 
 

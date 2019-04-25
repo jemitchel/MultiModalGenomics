@@ -22,9 +22,8 @@ def select_features(X,y,modality,method,n_feats):
 
             init_feats = reduce(X, y, 2000)
             X = X.loc[:, init_feats]
-            print('check1')
         elif modality == 'CNV':
-            X, y = discretize(X, y, modality, 1)
+            # X, y = discretize(X, y, modality, 1)
             init_feats = chi(X, y, 2000)
             X = X.loc[:, init_feats]
 
@@ -36,11 +35,10 @@ def select_features(X,y,modality,method,n_feats):
 
         # calling mRMR function
         feat_selected = pymrmr.mRMR(z,'MIQ',n_feats)
-        print('check 3')
     elif method == 'ttest':
         feat_selected = reduce(X, y, n_feats)
     elif method == 'chi-squared':
-        X,y = discretize(X,y,modality,.3)
+        # X,y = discretize(X,y,modality,.3)
         feat_selected = chi(X, y, n_feats)
     elif method == 'minfo':
         # selector = VarianceThreshold(threshold=.03)
@@ -61,8 +59,8 @@ def select_features(X,y,modality,method,n_feats):
             X = X.loc[:, init_feats]
 
         if modality == 'CNV':
-            X, y = discretize(X, y, modality, 1)
-            init_feats = chi(X, y, 1000)
+            # X, y = discretize(X, y, modality, 1)
+            init_feats = chi(X, y, 5000)
             X = X.loc[:, init_feats]
 
         feat_selected = minfo(X,y,n_feats)

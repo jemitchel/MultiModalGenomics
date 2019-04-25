@@ -48,24 +48,20 @@ def gen_curve(frame,lbl,modality,n_times):
         y_train_copy = pd.DataFrame(y_train, copy=True)
 
         if modality == 'gene':
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',36)
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene', 40, 2)
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',120)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene', 40, 2)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'ttest', 'gene',40,2)
 
         elif modality == 'CNV':
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'mrmr', 'CNV',20)
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV', 50, 2)
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV',120)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV', 50, 2)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'CNV',40,5)
 
         elif modality == 'meth':
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',60)
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth', 60, 2)
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',120)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth', 60, 2)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'meth',40,5)
 
         else:
-            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',24, 2)
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',30)
-            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',120)
+            # clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',24, 2)
+            clf, feats, _ = do_cv(X_train_copy, y_train_copy, X_test, y_test, 'minfo', 'miRNA',40,5)
 
 
         X_test = X_test[feats]
